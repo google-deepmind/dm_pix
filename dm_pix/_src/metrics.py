@@ -174,7 +174,7 @@ def ssim(
   # Blur in x and y (faster than the 2D convolution).
   def convolve2d(z, f):
     return jsp.signal.convolve2d(
-        z, f, mode='valid', precision=jax.lax.Precision.HIGHEST)
+        z, f, mode="valid", precision=jax.lax.Precision.HIGHEST)
 
   filt_fn1 = lambda z: convolve2d(z, filt[:, jnp.newaxis])
   filt_fn2 = lambda z: convolve2d(z, filt[jnp.newaxis, :])

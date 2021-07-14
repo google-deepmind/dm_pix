@@ -20,42 +20,42 @@ from absl.testing import parameterized
 import chex
 from dm_pix._src import metrics
 import jax
-from jax import test_util as jtu
+import jax.test_util as jtu
 import numpy as np
 import tensorflow as tf
 
 
-# class MetricsTest(chex.TestCase, jtu.JaxTestCase, parameterized.TestCase):
+class MSETest(chex.TestCase, jtu.JaxTestCase, parameterized.TestCase):
 
-#   def setUp(self):
-#     super().setUp()
-#     key = jax.random.PRNGKey(0)
-#     key1, key2 = jax.random.split(key)
-#     self._img1 = jax.random.uniform(
-#         key1,
-#         shape=(4, 32, 32, 3),
-#         minval=0.,
-#         maxval=1.,
-#     )
-#     self._img2 = jax.random.uniform(
-#         key2,
-#         shape=(4, 32, 32, 3),
-#         minval=0.,
-#         maxval=1.,
-#     )
+  def setUp(self):
+    super().setUp()
+    key = jax.random.PRNGKey(0)
+    key1, key2 = jax.random.split(key)
+    self._img1 = jax.random.uniform(
+        key1,
+        shape=(4, 32, 32, 3),
+        minval=0.,
+        maxval=1.,
+    )
+    self._img2 = jax.random.uniform(
+        key2,
+        shape=(4, 32, 32, 3),
+        minval=0.,
+        maxval=1.,
+    )
 
-#   @chex.all_variants
-#   def test_psnr_match(self):
-#     psnr = self.variant(metrics.psnr)
-#     values_jax = psnr(self._img1, self._img2)
-#     values_tf = tf.image.psnr(self._img1, self._img2, max_val=1.).numpy()
-#     self.assertAllClose(values_jax, values_tf, rtol=1e-3, atol=1e-3)
+  @chex.all_variants
+  def test_psnr_match(self):
+    psnr = self.variant(metrics.psnr)
+    values_jax = psnr(self._img1, self._img2)
+    values_tf = tf.image.psnr(self._img1, self._img2, max_val=1.).numpy()
+    self.assertAllClose(values_jax, values_tf, rtol=1e-3, atol=1e-3)
 
-#   @chex.all_variants
-#   def test_simse_invariance(self):
-#     simse = self.variant(metrics.simse)
-#     simse_jax = simse(self._img1, self._img1 * 2.0)
-#     self.assertAllClose(simse_jax, np.zeros(4), rtol=1e-6, atol=1e-6)
+  @chex.all_variants
+  def test_simse_invariance(self):
+    simse = self.variant(metrics.simse)
+    simse_jax = simse(self._img1, self._img1 * 2.0)
+    self.assertAllClose(simse_jax, np.zeros(4), rtol=1e-6, atol=1e-6)
 
 
 class SSIMTests(chex.TestCase, jtu.JaxTestCase, parameterized.TestCase):
@@ -126,5 +126,5 @@ class SSIMTests(chex.TestCase, jtu.JaxTestCase, parameterized.TestCase):
     self.assertAllClose(ssim, -np.ones_like(ssim))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   absltest.main()

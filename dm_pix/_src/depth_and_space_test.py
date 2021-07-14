@@ -16,7 +16,7 @@
 from absl.testing import parameterized
 import chex
 from dm_pix._src import depth_and_space
-from jax import test_util as jtu
+import jax.test_util as jtu
 import numpy as np
 import tensorflow as tf
 
@@ -46,5 +46,5 @@ class DepthAndSpaceTest(chex.TestCase, jtu.JaxTestCase, parameterized.TestCase):
     self.assertArraysEqual(output_tf, output_jax)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

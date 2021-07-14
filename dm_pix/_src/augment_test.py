@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Tests for dm_pix._src.augment."""
 
 import functools
@@ -20,7 +19,7 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from dm_pix._src import augment
 import jax
-from jax import test_util as jtu
+import jax.test_util as jtu
 import numpy as np
 import tensorflow as tf
 
@@ -43,11 +42,11 @@ class _ImageAugmentationTest(jtu.JaxTestCase, parameterized.TestCase):
 
   def assertAllCloseTolerant(self, x, y):
     # Increase tolerance on TPU due to lower precision.
-    tol = 1e-2 if jax.local_devices()[0].platform == 'tpu' else 1e-4
+    tol = 1e-2 if jax.local_devices()[0].platform == "tpu" else 1e-4
     super().assertAllClose(x, y, rtol=tol, atol=tol)
 
-  @parameterized.named_parameters(('in_range', _RAND_FLOATS_IN_RANGE),
-                                  ('out_of_range', _RAND_FLOATS_OUT_OF_RANGE))
+  @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
+                                  ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
   def test_adjust_brightness(self, images_list):
     self._test_fn_with_random_arg(
         images_list,
@@ -62,8 +61,8 @@ class _ImageAugmentationTest(jtu.JaxTestCase, parameterized.TestCase):
         tf_fn=None,
         max_delta=(0, 0.5))
 
-  @parameterized.named_parameters(('in_range', _RAND_FLOATS_IN_RANGE),
-                                  ('out_of_range', _RAND_FLOATS_OUT_OF_RANGE))
+  @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
+                                  ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
   def test_adjust_contrast(self, images_list):
     self._test_fn_with_random_arg(
         images_list,
@@ -78,7 +77,7 @@ class _ImageAugmentationTest(jtu.JaxTestCase, parameterized.TestCase):
         lower=(0, 0.9))
 
   # Doesn't make sense outside of [0, 1].
-  @parameterized.named_parameters(('in_range', _RAND_FLOATS_IN_RANGE))
+  @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE))
   def test_adjust_gamma(self, images_list):
     self._test_fn_with_random_arg(
         images_list,
@@ -86,8 +85,8 @@ class _ImageAugmentationTest(jtu.JaxTestCase, parameterized.TestCase):
         tf_fn=tf.image.adjust_gamma,
         gamma=(0.5, 1.5))
 
-  @parameterized.named_parameters(('in_range', _RAND_FLOATS_IN_RANGE),
-                                  ('out_of_range', _RAND_FLOATS_OUT_OF_RANGE))
+  @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
+                                  ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
   def test_adjust_saturation(self, images_list):
     # tf.image.adjust_saturation has a buggy implementation when the green and
     # blue channels have very close values that don't match the red channel.
@@ -100,6 +99,7 @@ class _ImageAugmentationTest(jtu.JaxTestCase, parameterized.TestCase):
       rgb_new = np.copy(rgb)
       rgb_new[..., 1] += 0.001 * (np.abs(rgb[..., 2] - rgb[..., 1]) < 1e-3)
       return rgb_new
+
     images_list = list(map(perturb, images_list))
     self._test_fn_with_random_arg(
         images_list,
@@ -115,7 +115,8 @@ class _ImageAugmentationTest(jtu.JaxTestCase, parameterized.TestCase):
 
   # CPU TF uses a different hue adjustment method outside of the [0, 1] range.
   # Disable out-of-range tests.
-  @parameterized.named_parameters(('in_range', _RAND_FLOATS_IN_RANGE),)
+  @parameterized.named_parameters(
+      ("in_range", _RAND_FLOATS_IN_RANGE),)
   def test_adjust_hue(self, images_list):
     self._test_fn_with_random_arg(
         images_list,
@@ -129,24 +130,26 @@ class _ImageAugmentationTest(jtu.JaxTestCase, parameterized.TestCase):
         tf_fn=None,
         max_delta=(0, 0.5))
 
-  @parameterized.named_parameters(('in_range', _RAND_FLOATS_IN_RANGE),
-                                  ('out_of_range', _RAND_FLOATS_OUT_OF_RANGE))
+  @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
+                                  ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
   def test_grayscale(self, images_list):
     self._test_fn(
         images_list,
         jax_fn=augment.rgb_to_grayscale,
         tf_fn=tf.image.rgb_to_grayscale)
 
-  @parameterized.named_parameters(('in_range', _RAND_FLOATS_IN_RANGE),
-                                  ('out_of_range', _RAND_FLOATS_OUT_OF_RANGE))
+  @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
+                                  ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
   def test_grayscale_keep_dims(self, images_list):
     jax_fn = functools.partial(augment.rgb_to_grayscale, keep_dims=True)
+
     def tf_fn(image):
       return tf.image.grayscale_to_rgb(tf.image.rgb_to_grayscale(image))
+
     self._test_fn(images_list, jax_fn=jax_fn, tf_fn=tf_fn)
 
-  @parameterized.named_parameters(('in_range', _RAND_FLOATS_IN_RANGE),
-                                  ('out_of_range', _RAND_FLOATS_OUT_OF_RANGE))
+  @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
+                                  ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
   def test_rot90(self, images_list):
     self._test_fn(
         images_list,
@@ -163,8 +166,8 @@ class _ImageAugmentationTest(jtu.JaxTestCase, parameterized.TestCase):
 
   # The functions below don't have a TF equivalent to compare to, we just check
   # that they run.
-  @parameterized.named_parameters(('in_range', _RAND_FLOATS_IN_RANGE),
-                                  ('out_of_range', _RAND_FLOATS_OUT_OF_RANGE))
+  @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
+                                  ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
   def test_flip(self, images_list):
     self._test_fn(
         images_list,
@@ -182,21 +185,21 @@ class _ImageAugmentationTest(jtu.JaxTestCase, parameterized.TestCase):
         jax_fn=functools.partial(augment.random_flip_up_down, key),
         tf_fn=None)
 
-  @parameterized.named_parameters(('in_range', _RAND_FLOATS_IN_RANGE),
-                                  ('out_of_range', _RAND_FLOATS_OUT_OF_RANGE))
+  @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
+                                  ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
   def test_solarize(self, images_list):
     self._test_fn_with_random_arg(
         images_list, jax_fn=augment.solarize, tf_fn=None, threshold=(0., 1.))
 
-  @parameterized.named_parameters(('in_range', _RAND_FLOATS_IN_RANGE),
-                                  ('out_of_range', _RAND_FLOATS_OUT_OF_RANGE))
+  @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
+                                  ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
   def test_gaussian_blur(self, images_list):
     blur_fn = functools.partial(augment.gaussian_blur, kernel_size=_KERNEL_SIZE)
     self._test_fn_with_random_arg(
         images_list, jax_fn=blur_fn, tf_fn=None, sigma=(0.1, 2.0))
 
-  @parameterized.named_parameters(('in_range', _RAND_FLOATS_IN_RANGE),
-                                  ('out_of_range', _RAND_FLOATS_OUT_OF_RANGE))
+  @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
+                                  ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
   def test_random_crop(self, images_list):
     key = jax.random.PRNGKey(43)
     crop_fn = lambda img: augment.random_crop(key, img, (100, 100, 3))
@@ -232,14 +235,15 @@ class TestVmap(_ImageAugmentationTest):
     assert len(kw_range) == 1
     kw_name, (random_min, random_max) = list(kw_range.items())[0]
     arguments = [
-        np.random.uniform(random_min, random_max, size=()) for _ in images_list]
+        np.random.uniform(random_min, random_max, size=()) for _ in images_list
+    ]
     fn_vmap = jax.vmap(jax_fn)
-    outputs_vmaped = list(fn_vmap(np.stack(images_list, axis=0),
-                                  np.stack(arguments, axis=0)))
+    outputs_vmaped = list(
+        fn_vmap(np.stack(images_list, axis=0), np.stack(arguments, axis=0)))
     assert len(images_list) == len(outputs_vmaped)
     assert len(images_list) == len(arguments)
-    for image_rgb, argument, adjusted_vmap in zip(
-        images_list, arguments, outputs_vmaped):
+    for image_rgb, argument, adjusted_vmap in zip(images_list, arguments,
+                                                  outputs_vmaped):
       adjusted_jax = jax_fn(image_rgb, **{kw_name: argument})
       self.assertAllCloseTolerant(adjusted_jax, adjusted_vmap)
 
@@ -274,5 +278,6 @@ class TestJit(_ImageAugmentationTest):
       adjusted_jit = jax_fn_jitted(image_rgb)
       self.assertAllCloseTolerant(adjusted_jax, adjusted_jit)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
   absltest.main()

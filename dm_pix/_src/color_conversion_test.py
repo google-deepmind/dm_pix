@@ -19,8 +19,8 @@ from absl.testing import parameterized
 import chex
 from dm_pix._src import color_conversion
 import jax
-from jax import test_util as jtu
 import jax.numpy as jnp
+import jax.test_util as jtu
 import numpy as np
 import tensorflow as tf
 

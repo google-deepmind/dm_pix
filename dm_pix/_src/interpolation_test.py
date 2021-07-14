@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Tests for dm_pix._src.interpolation."""
 
 from typing import Sequence, Tuple
@@ -20,8 +19,8 @@ from absl.testing import absltest
 from absl.testing import parameterized
 import chex
 from dm_pix._src import interpolation
-from jax import test_util as jtu
 import jax.numpy as jnp
+import jax.test_util as jtu
 
 _SHAPE_COORDS = ((1, 1), (1, 3), (3, 2), (4, 4), (4, 1, 4), (4, 2, 2))
 
@@ -72,8 +71,8 @@ def _prepare_inputs(
   elif shape_output_coordinates[0] == template_volume.ndim:
     volume = template_volume
   else:
-    raise ValueError(f'Unsupported shape_output_coordinates[0] = '
-                     f'{shape_output_coordinates[0]}')
+    raise ValueError("Unsupported shape_output_coordinates[0] = "
+                     f"{shape_output_coordinates[0]}")
 
   if len(shape_output_coordinates) == 2:
     if shape_output_coordinates <= template_coords.shape:
@@ -85,15 +84,15 @@ def _prepare_inputs(
         # Do [[ num ]] -> [ num ] to test special case.
         coordinates = coordinates.squeeze(axis=-1)
     else:
-      raise ValueError(f'Unsupported shape_output_coordinates[1] = '
-                       f'{shape_output_coordinates[1]}')
+      raise ValueError("Unsupported shape_output_coordinates[1] = "
+                       f"{shape_output_coordinates[1]}")
   else:
     try:
       # In this case, try reshaping the _TEMPLATE_COORDS to the desired shape.
       coordinates = jnp.reshape(template_coords, shape_output_coordinates)
     except TypeError:
-      raise ValueError(f'Unsupported shape_output_coordinates = '
-                       f'{shape_output_coordinates}')
+      raise ValueError(f"Unsupported shape_output_coordinates = "
+                       f"{shape_output_coordinates}")
 
   return volume, coordinates
 
@@ -109,15 +108,15 @@ def _prepare_expected(shape_coordinates: Sequence[int]) -> jnp.ndarray:
     elif shape_coordinates[0] == 4:
       out = jnp.array([4.922847, 3.128356, 3.4009826, 0.88441014])
     else:
-      raise ValueError(f'Unsupported shape_coordinates = {shape_coordinates}')
+      raise ValueError(f"Unsupported shape_coordinates = {shape_coordinates}")
   elif shape_coordinates[0] == 4:
     try:
       out = jnp.array([4.922847, 3.128356, 3.4009826, 0.88441014])
       out = jnp.reshape(out, shape_coordinates[1:])
     except TypeError:
-      raise ValueError(f'Unsupported shape_coordinates = {shape_coordinates}')
+      raise ValueError(f"Unsupported shape_coordinates = {shape_coordinates}")
   else:
-    raise ValueError(f'Unsupported shape_coordinates = {shape_coordinates}')
+    raise ValueError(f"Unsupported shape_coordinates = {shape_coordinates}")
 
   return out
 
@@ -127,7 +126,7 @@ class InterpolationTest(chex.TestCase, jtu.JaxTestCase, parameterized.TestCase):
   @chex.all_variants
   @parameterized.named_parameters(
       jtu.cases_from_list(
-          dict(testcase_name=f'_{shape}_coords', shape_coordinates=shape)
+          dict(testcase_name=f"_{shape}_coords", shape_coordinates=shape)
           for shape in _SHAPE_COORDS))
   def test_flat_nd_linear_interpolate(self, shape_coordinates):
     volume, coords = _prepare_inputs(shape_coordinates)
@@ -142,5 +141,5 @@ class InterpolationTest(chex.TestCase, jtu.JaxTestCase, parameterized.TestCase):
         expected)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   absltest.main()

@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Tests for dm_pix API."""
 
 import inspect
@@ -39,8 +38,9 @@ class ApiTest(parameterized.TestCase):
     self.assertNotIn("rng", param_names,
                      "Prefer `key` to `rng` in PIX (following JAX).")
     if "key" in param_names:
-      self.assertLess(param_names.index("key"), param_names.index("image"),
-                      "RNG `key` argument should be before `image` in PIX.")
+      self.assertLess(
+          param_names.index("key"), param_names.index("image"),
+          "RNG `key` argument should be before `image` in PIX.")
 
   @parameterized.named_parameters(*named_pix_functions())
   def test_kwarg_only_defaults(self, f):
@@ -50,9 +50,11 @@ class ApiTest(parameterized.TestCase):
       self.assertLen(argspec.defaults, 1)
       return
 
-    self.assertEmpty(argspec.defaults or (),
-                     "Optional keyword arguments in PIX should be keyword "
-                     "only. Prefer `f(x, *, axis=-1)` to `f(x, axis=-1)`.")
+    self.assertEmpty(
+        argspec.defaults or (),
+        "Optional keyword arguments in PIX should be keyword "
+        "only. Prefer `f(x, *, axis=-1)` to `f(x, axis=-1)`.")
+
 
 if __name__ == "__main__":
   absltest.main()

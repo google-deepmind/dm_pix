@@ -41,8 +41,8 @@ def _parse_requirements(requirements_txt_path):
 
 _VERSION = _get_version()
 _EXTRA_PACKAGES = {
-    'jax': ['jax>=0.2.12'],
-    'jaxlib': ['jaxlib>=0.1.65'],
+    'jax': ['jax>=0.2.17'],
+    'jaxlib': ['jaxlib>=0.1.69'],
 }
 
 setup(
@@ -56,7 +56,7 @@ setup(
     long_description_content_type='text/markdown',
     author_email='pix-dev@google.com',
     # Contained modules and scripts.
-    packages=find_namespace_packages(exclude=['*_test.py']),
+    packages=find_namespace_packages(exclude=['*_test.py', 'examples']),
     install_requires=_parse_requirements(
         os.path.join(_CURRENT_DIR, 'requirements.txt')),
     extras_require=_EXTRA_PACKAGES,

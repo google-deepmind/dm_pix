@@ -37,7 +37,7 @@ For example, let's assume to have loaded the JAX logo (available in
 `examples/assets/jax_logo.jpg`) in a variable called `image` and we want to flip
 it left to right.
 
-![JAX logo](examples/assets/jax_logo.jpg)
+![JAX logo]
 
 All it's needed is the following code!
 
@@ -52,7 +52,7 @@ flip_left_right_image = pix.flip_left_right(image)
 
 And here is the result!
 
-![JAX logo left-right](examples/assets/flip_left_right_jax_logo.jpg)
+![JAX logo left-right]
 
 All the functions in PIX can be [`jax.jit`][jit]ed, [`jax.vmap`][vmap]ed and
 [`jax.pmap`][pmap]ed, so all the following functions can take advantage of
@@ -126,8 +126,6 @@ We are very happy to accept contributions!
 
 Please read our [contributing guidelines][./CONTRIBUTING.md] and send us PRs!
 
---------------------------------------------------------------------------------
-
 [Autograd]: https://github.com/hips/autograd "Autograd on GitHub"
 [DeepMind JAX Ecosystem]: https://deepmind.com/blog/article/using-jax-to-accelerate-our-research "DeepMind JAX Ecosystem"
 [DeepMind JAX Ecosystem citation]: https://github.com/deepmind/jax/blob/main/deepmind2020jax.txt "Citation"
@@ -141,4 +139,6 @@ Please read our [contributing guidelines][./CONTRIBUTING.md] and send us PRs!
 [vmap]: https://jax.readthedocs.io/en/latest/jax.html#jax.vmap "jax.vmap documentation"
 
 [`examples/`]: ./examples/
+[JAX logo]: ./examples/assets/jax_logo.jpg
+[JAX logo left-right]: ./examples/assets/flip_left_right_jax_logo.jpg
 [`requirements.txt`]: ./requirements.txt
