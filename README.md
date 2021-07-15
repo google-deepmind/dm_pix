@@ -17,8 +17,8 @@ through [`jax.jit`][jit], [`jax.vmap`][vmap] and [`jax.pmap`][pmap].
 PIX is written in pure Python, but depends on C++ code via JAX.
 
 Because JAX installation is different depending on your CUDA version, PIX does
-not list JAX as a dependency in [`requirements.txt`] (although it is technically
-listed for reference, but commented).
+not list JAX as a dependency in [`requirements.txt`], although it is technically
+listed for reference, but commented.
 
 First, follow [JAX installation instructions] to install JAX with the relevant
 accelerator support.
