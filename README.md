@@ -124,7 +124,7 @@ the [DeepMind JAX Ecosystem citation].
 
 We are very happy to accept contributions!
 
-Please read our [contributing guidelines][./CONTRIBUTING.md] and send us PRs!
+Please read our [contributing guidelines](./CONTRIBUTING.md) and send us PRs!
 
 [Autograd]: https://github.com/hips/autograd "Autograd on GitHub"
 [DeepMind JAX Ecosystem]: https://deepmind.com/blog/article/using-jax-to-accelerate-our-research "DeepMind JAX Ecosystem"

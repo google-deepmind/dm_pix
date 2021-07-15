@@ -27,8 +27,6 @@ the CLA can be accepted into the main repository.
 If you have improvements to PIX, send us your pull requests! For those just
 getting started, Github has a [HowTo].
 
---------------------------------------------------------------------------------
-
 [Individual CLA]: https://cla.developers.google.com/about/google-individual?csw=1 "Individual CLA"
 [Corporate CLA]: https://cla.developers.google.com/about/google-corporate?csw=1 "Corporate CLA"
 [HowTo]: https://help.github.com/articles/using-pull-requests/ "GitHub PR HowTo"
