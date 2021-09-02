@@ -16,7 +16,6 @@
 import functools
 
 from absl.testing import absltest
-from absl.testing import parameterized
 import chex
 from dm_pix._src import metrics
 import jax
@@ -25,7 +24,7 @@ import numpy as np
 import tensorflow as tf
 
 
-class MSETest(chex.TestCase, jtu.JaxTestCase, parameterized.TestCase):
+class MSETest(chex.TestCase, jtu.JaxTestCase, absltest.TestCase):
 
   def setUp(self):
     super().setUp()
@@ -58,7 +57,7 @@ class MSETest(chex.TestCase, jtu.JaxTestCase, parameterized.TestCase):
     self.assertAllClose(simse_jax, np.zeros(4), rtol=1e-6, atol=1e-6)
 
 
-class SSIMTests(chex.TestCase, jtu.JaxTestCase, parameterized.TestCase):
+class SSIMTests(chex.TestCase, jtu.JaxTestCase, absltest.TestCase):
 
   @chex.all_variants
   def test_ssim_golden(self):

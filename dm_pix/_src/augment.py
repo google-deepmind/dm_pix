@@ -11,11 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """This module provides image augmentation functions.
 
-All functions expect float-encoded images, with values between 0 and 1, but do
-not clip their outputs to this range to allow chaining without losing
+All functions expect float-encoded images, with values in [0, 1].
+Do not clip their outputs to this range to allow chaining without losing
 information. The outside-of-bounds behavior is (as much as possible) similar to
 that of TensorFlow.
 """
@@ -51,7 +50,7 @@ def adjust_contrast(
 ) -> chex.Array:
   """Adjusts the contrast of an RGB image by a given multiplicative amount.
 
-  This is equivalent to tf.image.adjust_contrast.
+  This is equivalent to `tf.image.adjust_contrast`.
 
   Args:
     image: an RGB image, given as a float tensor in [0, 1].
@@ -78,7 +77,8 @@ def adjust_gamma(
 ) -> chex.Array:
   """Adjusts the gamma of an RGB image.
 
-  This is equivalent to tf.image.adjust_gamma, ie returns gain * image ** gamma.
+  This is equivalent to `tf.image.adjust_gamma`, i.e. returns
+  `gain * image ** gamma`.
 
   Args:
     image: an RGB image, given as a [0-1] float tensor.
@@ -94,7 +94,7 @@ def adjust_gamma(
   if not assume_in_bounds:
     image = jnp.clip(image, 0., 1.)  # Clip image for safety.
   return jnp.asarray(gain, image.dtype) * (
-      image ** jnp.asarray(gamma, image.dtype))
+      image**jnp.asarray(gamma, image.dtype))
 
 
 def adjust_hue(
@@ -105,7 +105,7 @@ def adjust_hue(
 ) -> chex.Array:
   """Adjusts the hue of an RGB image by a given multiplicative amount.
 
-  This is equivalent to tf.image.adjust_hue when TF is running on GPU. When
+  This is equivalent to `tf.image.adjust_hue` when TF is running on GPU. When
   running on CPU, the results will be different if all RGB values for a pixel
   are outside of the [0, 1] range.
 
@@ -119,8 +119,8 @@ def adjust_hue(
   """
   rgb = color_conversion.split_channels(image, channel_axis)
   hue, saturation, value = color_conversion.rgb_planes_to_hsv_planes(*rgb)
-  rgb_adjusted = color_conversion.hsv_planes_to_rgb_planes(
-      (hue + delta) % 1.0, saturation, value)
+  rgb_adjusted = color_conversion.hsv_planes_to_rgb_planes((hue + delta) % 1.0,
+                                                           saturation, value)
   return jnp.stack(rgb_adjusted, axis=channel_axis)
 
 
@@ -132,7 +132,7 @@ def adjust_saturation(
 ) -> chex.Array:
   """Adjusts the saturation of an RGB image by a given multiplicative amount.
 
-  This is equivalent to tf.image.adjust_saturation.
+  This is equivalent to `tf.image.adjust_saturation`.
 
   Args:
     image: an RGB image, given as a [0-1] float tensor.
@@ -224,8 +224,8 @@ def gaussian_blur(
   num_channels = image.shape[channel_axis]
   radius = int(kernel_size / 2)
   kernel_size_ = 2 * radius + 1
-  x = jnp.arange(-radius, radius+1).astype(jnp.float32)
-  blur_filter = jnp.exp(-x**2 / (2. * sigma ** 2))
+  x = jnp.arange(-radius, radius + 1).astype(jnp.float32)
+  blur_filter = jnp.exp(-x**2 / (2. * sigma**2))
   blur_filter = blur_filter / jnp.sum(blur_filter)
   blur_v = jnp.reshape(blur_filter, [kernel_size_, 1, 1, 1])
   blur_h = jnp.reshape(blur_filter, [1, kernel_size_, 1, 1])
@@ -263,12 +263,12 @@ def rgb_to_grayscale(
 ) -> chex.Array:
   """Converts an image to a grayscale image using the luma value.
 
-  This is equivalent to tf.image.rgb_to_grayscale (when keep_channels=False).
+  This is equivalent to `tf.image.rgb_to_grayscale` (when keep_channels=False).
 
   Args:
     image: an RGB image, given as a float tensor in [0, 1].
-    keep_dims: if False (default), returns a tensor with a single channel.
-      If True, will tile the resulting channel.
+    keep_dims: if False (default), returns a tensor with a single channel. If
+      True, will tile the resulting channel.
     luma_standard: the luma standard to use, either "rec601", "rec709" or
       "bt2001". The default rec601 corresponds to TensorFlow's.
     channel_axis: the index of the channel axis.
@@ -284,8 +284,7 @@ def rgb_to_grayscale(
     rgb_weights = jnp.array([0.2126, 0.7152, 0.0722], dtype=image.dtype)
   else:
     rgb_weights = jnp.array([0.2627, 0.6780, 0.0593], dtype=image.dtype)
-  grayscale = jnp.tensordot(
-      image, rgb_weights, axes=(channel_axis, -1))
+  grayscale = jnp.tensordot(image, rgb_weights, axes=(channel_axis, -1))
   # Add back the channel axis.
   grayscale = jnp.expand_dims(grayscale, axis=channel_axis)
   if keep_dims:
@@ -414,9 +413,9 @@ def random_crop(
     key : Key for pseudo-random number generator.
     image : A JAX array which represents an image.
     crop_sizes: A sequence of integers, each of which sequentially specifies the
-    crop size along the corresponding dimension of the image. Sequence length
-    must be identical to the rank of the image and the crop size should not
-    be greater than the corresponding image dimension.
+      crop size along the corresponding dimension of the image. Sequence length
+      must be identical to the rank of the image and the crop size should not be
+      greater than the corresponding image dimension.
 
   Returns:
     A cropped image, a JAX array whose shape is same as `crop_sizes`.

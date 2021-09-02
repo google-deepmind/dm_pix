@@ -11,23 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""This module provides functions for interpolating ND images.
 
-"""This module provides functions for interpolating ND images."""
+All functions expect float-encoded images, with values in [0, 1].
+"""
 
 import itertools
 from typing import Optional, Sequence, Tuple
 
+import chex
 from jax import lax
 import jax.numpy as jnp
 
 
-def _round_half_away_from_zero(a: jnp.ndarray) -> jnp.ndarray:
+def _round_half_away_from_zero(a: chex.Array) -> chex.Array:
   return a if jnp.issubdtype(a.dtype, jnp.integer) else lax.round(a)
 
 
 def _make_linear_interpolation_indices_nd(
-    coordinates: jnp.ndarray,
-    shape: jnp.ndarray) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
+    coordinates: chex.Array,
+    shape: chex.Array,
+) -> Tuple[chex.Array, chex.Array, chex.Array]:
   """Creates linear interpolation indices and weights for ND coordinates.
 
   Args:
@@ -52,8 +56,9 @@ def _make_linear_interpolation_indices_nd(
 
 
 def _make_linear_interpolation_indices_flat_nd(
-    coordinates: jnp.ndarray,
-    shape: Sequence[int]) -> Tuple[jnp.ndarray, jnp.ndarray]:
+    coordinates: chex.Array,
+    shape: Sequence[int],
+) -> Tuple[chex.Array, chex.Array]:
   """Creates flat linear interpolation indices and weights for ND coordinates.
 
   Args:
@@ -115,10 +120,10 @@ def _make_linear_interpolation_indices_flat_nd(
 
 
 def _linear_interpolate_using_indices_nd(
-    volume: jnp.ndarray,
-    indices: jnp.ndarray,
-    weights: jnp.ndarray,
-) -> jnp.ndarray:
+    volume: chex.Array,
+    indices: chex.Array,
+    weights: chex.Array,
+) -> chex.Array:
   """Interpolates linearly on `volume` using `indices` and `weights`."""
   target = jnp.sum(weights * volume[indices], axis=0)
   if jnp.issubdtype(volume.dtype, jnp.integer):
@@ -127,10 +132,11 @@ def _linear_interpolate_using_indices_nd(
 
 
 def flat_nd_linear_interpolate(
-    volume: jnp.ndarray,
-    coordinates: jnp.ndarray,
+    volume: chex.Array,
+    coordinates: chex.Array,
     *,
-    unflattened_vol_shape: Optional[Sequence[int]] = None) -> jnp.ndarray:
+    unflattened_vol_shape: Optional[Sequence[int]] = None,
+) -> chex.Array:
   """Maps the input ND volume to coordinates by linear interpolation.
 
   Args:

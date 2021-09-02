@@ -13,8 +13,8 @@
 # limitations under the License.
 """Functions to compare image pairs.
 
-Images are assumed to be [0, 1] of floating point dtype with [N]HWC shapes.
-Each image metric function returns a scalar for each image pair.
+All functions expect float-encoded images, with values in [0, 1], with NHWC
+shapes. Each image metric function returns a scalar for each image pair.
 """
 
 import chex
