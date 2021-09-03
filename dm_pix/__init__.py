@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """PIX public APIs."""
 
 from dm_pix._src import augment
@@ -19,6 +18,7 @@ from dm_pix._src import color_conversion
 from dm_pix._src import depth_and_space
 from dm_pix._src import interpolation
 from dm_pix._src import metrics
+from dm_pix._src import patch
 
 __version__ = "0.1.0"
 
@@ -52,10 +52,10 @@ rgb_to_hsv = color_conversion.rgb_to_hsv
 depth_to_space = depth_and_space.depth_to_space
 space_to_depth = depth_and_space.space_to_depth
 
-# Interpolation
+# Interpolation.
 flat_nd_linear_interpolate = interpolation.flat_nd_linear_interpolate
 
-# Metrics
+# Metrics.
 mae = metrics.mae
 mse = metrics.mse
 psnr = metrics.psnr
@@ -63,7 +63,10 @@ rmse = metrics.rmse
 simse = metrics.simse
 ssim = metrics.ssim
 
-del augment, color_conversion, depth_and_space, interpolation, metrics
+# Patch.
+extract_patches = patch.extract_patches
+
+del augment, color_conversion, depth_and_space, interpolation, metrics, patch
 
 __all__ = (
     "adjust_brightness",
@@ -72,6 +75,7 @@ __all__ = (
     "adjust_hue",
     "adjust_saturation",
     "depth_to_space",
+    "extract_patches",
     "flat_nd_linear_interpolate",
     "flip_left_right",
     "flip_up_down",
