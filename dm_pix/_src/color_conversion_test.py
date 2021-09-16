@@ -61,6 +61,7 @@ class ColorConversionTest(
     parameterized.TestCase,
 ):
 
+  @chex.all_variants
   @parameterized.product(
       test_images=[
           TestImages.RAND_FLOATS_IN_RANGE,
@@ -72,16 +73,20 @@ class ColorConversionTest(
   )
   def test_hsv_to_rgb(self, test_images, channel_last):
     channel_axis = -1 if channel_last else -3
+    hsv_to_rgb = self.variant(
+        functools.partial(
+            color_conversion.hsv_to_rgb, channel_axis=channel_axis))
     for hsv in generate_test_images(*test_images.value):
       hsv = np.clip(hsv, 0., 1.)
       rgb_tf = tf.image.hsv_to_rgb(hsv).numpy()
       if not channel_last:
         hsv = hsv.swapaxes(-1, -3)
-      rgb_jax = color_conversion.hsv_to_rgb(hsv, channel_axis=channel_axis)
+      rgb_jax = hsv_to_rgb(hsv)
       if not channel_last:
         rgb_jax = rgb_jax.swapaxes(-1, -3)
       self.assertAllClose(rgb_jax, rgb_tf, rtol=1e-3, atol=1e-3)
 
+  @chex.all_variants
   @parameterized.product(
       test_images=[
           TestImages.RAND_FLOATS_IN_RANGE,
@@ -93,20 +98,26 @@ class ColorConversionTest(
   )
   def test_rgb_to_hsv(self, test_images, channel_last):
     channel_axis = -1 if channel_last else -3
+    rgb_to_hsv = self.variant(
+        functools.partial(
+            color_conversion.rgb_to_hsv, channel_axis=channel_axis))
     for rgb in generate_test_images(*test_images.value):
       hsv_tf = tf.image.rgb_to_hsv(rgb).numpy()
       if not channel_last:
         rgb = rgb.swapaxes(-1, -3)
-      hsv_jax = color_conversion.rgb_to_hsv(rgb, channel_axis=channel_axis)
+      hsv_jax = rgb_to_hsv(rgb)
       if not channel_last:
         hsv_jax = hsv_jax.swapaxes(-1, -3)
       self.assertAllClose(hsv_jax, hsv_tf, rtol=1e-3, atol=1e-3)
 
+  @chex.all_variants
   def test_vmap_roundtrip(self):
     images = generate_test_images(*TestImages.RAND_FLOATS_IN_RANGE.value)
     rgb_init = np.stack(images, axis=0)
-    hsv = jax.vmap(color_conversion.rgb_to_hsv)(rgb_init)
-    rgb_final = jax.vmap(color_conversion.hsv_to_rgb)(hsv)
+    rgb_to_hsv = self.variant(jax.vmap(color_conversion.rgb_to_hsv))
+    hsv_to_rgb = self.variant(jax.vmap(color_conversion.hsv_to_rgb))
+    hsv = rgb_to_hsv(rgb_init)
+    rgb_final = hsv_to_rgb(hsv)
     self.assertAllClose(rgb_init, rgb_final, rtol=1e-3, atol=1e-3)
 
   def test_jit_roundtrip(self):
