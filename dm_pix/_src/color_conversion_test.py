@@ -14,6 +14,9 @@
 """Tests for dm_pix._src.color_conversion."""
 
 import colorsys
+import enum
+import functools
+from typing import Sequence
 
 from absl.testing import parameterized
 import chex
@@ -24,71 +27,91 @@ import jax.test_util as jtu
 import numpy as np
 import tensorflow as tf
 
+_NUM_IMAGES = 100
 _IMG_SHAPE = (16, 16, 3)
 _FLAT_IMG_SHAPE = (_IMG_SHAPE[0] * _IMG_SHAPE[1], _IMG_SHAPE[2])
-_RAND_FLOATS_IN_RANGE = list(
-    np.random.uniform(0., 1., size=(100,) + _IMG_SHAPE).astype(np.float32))
-_RAND_FLOATS_OUT_OF_RANGE = list(
-    np.random.uniform(-0.5, 1.5, size=(100,) + _IMG_SHAPE).astype(np.float32))
-_ALL_ONES = list(np.ones((1,) + _IMG_SHAPE, dtype=np.float32))
-_ALL_ZEROS = list(np.zeros((1,) + _IMG_SHAPE, dtype=np.float32))
 _QUANTISATIONS = (None, 16, 2)
 
 
-class ColorConversionTest(chex.TestCase, jtu.JaxTestCase,
-                          parameterized.TestCase):
+@enum.unique
+class TestImages(enum.Enum):
+  """Enum classes representing random images with (low, high, num_images)."""
+  RAND_FLOATS_IN_RANGE = (0., 1., _NUM_IMAGES)
+  RAND_FLOATS_OUT_OF_RANGE = (-0.5, 1.5, _NUM_IMAGES)
+  ALL_ONES = (1., 1., 1)
+  ALL_ZEROS = (0., 0., 1)
 
-  @parameterized.named_parameters(
-      ("in_range_hwc", _RAND_FLOATS_IN_RANGE, True),
-      ("out_of_range_hwc", _RAND_FLOATS_OUT_OF_RANGE, True),
-      ("in_range_chw", _RAND_FLOATS_IN_RANGE, False),
-      ("out_of_range_chw", _RAND_FLOATS_OUT_OF_RANGE, False),
-      ("all_ones_chw", _ALL_ONES, False),
-      ("all_zeros_chw", _ALL_ZEROS, False),
-      ("all_ones_hwc", _ALL_ONES, True),
-      ("all_zeros_hwc", _ALL_ZEROS, True),
+
+def generate_test_images(
+    low: float,
+    high: float,
+    num_images: int,
+) -> Sequence[chex.Array]:
+  images = np.random.uniform(
+      low=low,
+      high=high,
+      size=(num_images,) + _IMG_SHAPE,
   )
-  def test_hsv_to_rgb(self, data, channels_last):
-    channel_axis = -1 if channels_last else -3
-    for hsv in data:
+  return list(images.astype(np.float32))
+
+
+class ColorConversionTest(
+    chex.TestCase,
+    jtu.JaxTestCase,
+    parameterized.TestCase,
+):
+
+  @parameterized.product(
+      test_images=[
+          TestImages.RAND_FLOATS_IN_RANGE,
+          TestImages.RAND_FLOATS_OUT_OF_RANGE,
+          TestImages.ALL_ONES,
+          TestImages.ALL_ZEROS,
+      ],
+      channel_last=[True, False],
+  )
+  def test_hsv_to_rgb(self, test_images, channel_last):
+    channel_axis = -1 if channel_last else -3
+    for hsv in generate_test_images(*test_images.value):
       hsv = np.clip(hsv, 0., 1.)
       rgb_tf = tf.image.hsv_to_rgb(hsv).numpy()
-      if not channels_last:
+      if not channel_last:
         hsv = hsv.swapaxes(-1, -3)
       rgb_jax = color_conversion.hsv_to_rgb(hsv, channel_axis=channel_axis)
-      if not channels_last:
+      if not channel_last:
         rgb_jax = rgb_jax.swapaxes(-1, -3)
       self.assertAllClose(rgb_jax, rgb_tf, rtol=1e-3, atol=1e-3)
 
-  @parameterized.named_parameters(
-      ("in_range_hwc", _RAND_FLOATS_IN_RANGE, True),
-      ("out_of_range_hwc", _RAND_FLOATS_OUT_OF_RANGE, True),
-      ("in_range_chw", _RAND_FLOATS_IN_RANGE, False),
-      ("out_of_range_chw", _RAND_FLOATS_OUT_OF_RANGE, False),
-      ("all_ones_chw", _ALL_ONES, False),
-      ("all_zeros_chw", _ALL_ZEROS, False),
-      ("all_ones_hwc", _ALL_ONES, True),
-      ("all_zeros_hwc", _ALL_ZEROS, True),
+  @parameterized.product(
+      test_images=[
+          TestImages.RAND_FLOATS_IN_RANGE,
+          TestImages.RAND_FLOATS_OUT_OF_RANGE,
+          TestImages.ALL_ONES,
+          TestImages.ALL_ZEROS,
+      ],
+      channel_last=[True, False],
   )
-  def test_rgb_to_hsv(self, data, channels_last):
-    channel_axis = -1 if channels_last else -3
-    for rgb in data:
+  def test_rgb_to_hsv(self, test_images, channel_last):
+    channel_axis = -1 if channel_last else -3
+    for rgb in generate_test_images(*test_images.value):
       hsv_tf = tf.image.rgb_to_hsv(rgb).numpy()
-      if not channels_last:
+      if not channel_last:
         rgb = rgb.swapaxes(-1, -3)
       hsv_jax = color_conversion.rgb_to_hsv(rgb, channel_axis=channel_axis)
-      if not channels_last:
+      if not channel_last:
         hsv_jax = hsv_jax.swapaxes(-1, -3)
       self.assertAllClose(hsv_jax, hsv_tf, rtol=1e-3, atol=1e-3)
 
   def test_vmap_roundtrip(self):
-    rgb_init = np.stack(_RAND_FLOATS_IN_RANGE, axis=0)
+    images = generate_test_images(*TestImages.RAND_FLOATS_IN_RANGE.value)
+    rgb_init = np.stack(images, axis=0)
     hsv = jax.vmap(color_conversion.rgb_to_hsv)(rgb_init)
     rgb_final = jax.vmap(color_conversion.hsv_to_rgb)(hsv)
     self.assertAllClose(rgb_init, rgb_final, rtol=1e-3, atol=1e-3)
 
   def test_jit_roundtrip(self):
-    rgb_init = np.stack(_RAND_FLOATS_IN_RANGE, axis=0)
+    images = generate_test_images(*TestImages.RAND_FLOATS_IN_RANGE.value)
+    rgb_init = np.stack(images, axis=0)
     hsv = jax.jit(color_conversion.rgb_to_hsv)(rgb_init)
     rgb_final = jax.jit(color_conversion.hsv_to_rgb)(hsv)
     self.assertAllClose(rgb_init, rgb_final, rtol=1e-3, atol=1e-3)
@@ -184,6 +207,37 @@ class ColorConversionTest(chex.TestCase, jtu.JaxTestCase,
       rgb_to_hsl = self.variant(color_conversion.rgb_to_hsl)
       hsl_to_rgb = self.variant(color_conversion.hsl_to_rgb)
       self.assertAllClose(image_rgb, hsl_to_rgb(rgb_to_hsl(image_rgb)))
+
+  @chex.all_variants
+  @parameterized.product(
+      test_images=[
+          TestImages.RAND_FLOATS_IN_RANGE,
+          TestImages.RAND_FLOATS_OUT_OF_RANGE,
+          TestImages.ALL_ONES,
+          TestImages.ALL_ZEROS,
+      ],
+      keep_dims=[True, False],
+      channel_last=[True, False],
+  )
+  def test_grayscale(self, test_images, keep_dims, channel_last):
+    channel_axis = -1 if channel_last else -3
+    rgb_to_grayscale = self.variant(
+        functools.partial(
+            color_conversion.rgb_to_grayscale,
+            keep_dims=keep_dims,
+            channel_axis=channel_axis))
+    for rgb in generate_test_images(*test_images.value):
+      grayscale_tf = tf.image.rgb_to_grayscale(rgb).numpy()
+      if not channel_last:
+        rgb = rgb.swapaxes(-1, -3)
+      grayscale_jax = rgb_to_grayscale(rgb)
+      if not channel_last:
+        grayscale_jax = grayscale_jax.swapaxes(-1, -3)
+      if keep_dims:
+        for i in range(_IMG_SHAPE[-1]):
+          self.assertAllClose(grayscale_jax[..., [i]], grayscale_tf)
+      else:
+        self.assertAllClose(grayscale_jax, grayscale_tf)
 
 
 if __name__ == "__main__":

@@ -38,7 +38,6 @@ random_flip_left_right = augment.random_flip_left_right
 random_flip_up_down = augment.random_flip_up_down
 random_hue = augment.random_hue
 random_saturation = augment.random_saturation
-rgb_to_grayscale = augment.rgb_to_grayscale
 rot90 = augment.rot90
 solarize = augment.solarize
 
@@ -47,6 +46,7 @@ hsl_to_rgb = color_conversion.hsl_to_rgb
 hsv_to_rgb = color_conversion.hsv_to_rgb
 rgb_to_hsl = color_conversion.rgb_to_hsl
 rgb_to_hsv = color_conversion.rgb_to_hsv
+rgb_to_grayscale = color_conversion.rgb_to_grayscale
 
 # Depth and space.
 depth_to_space = depth_and_space.depth_to_space

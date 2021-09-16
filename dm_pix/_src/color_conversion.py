@@ -214,3 +214,45 @@ def hsl_to_rgb(
 
   image_rgb = jnp.stack([_f(h + 1 / 3), _f(h), _f(h - 1 / 3)], axis=-1)
   return jnp.where(s[..., jnp.newaxis] == 0, l[..., jnp.newaxis], image_rgb)
+
+
+def rgb_to_grayscale(
+    image: chex.Array,
+    *,
+    keep_dims: bool = False,
+    luma_standard="rec601",
+    channel_axis: int = -1,
+) -> chex.Array:
+  """Converts an image to a grayscale image using the luma value.
+
+  This is equivalent to `tf.image.rgb_to_grayscale` (when keep_channels=False).
+
+  Args:
+    image: an RGB image, given as a float tensor in [0, 1].
+    keep_dims: if False (default), returns a tensor with a single channel. If
+      True, will tile the resulting channel.
+    luma_standard: the luma standard to use, either "rec601", "rec709" or
+      "bt2001". The default rec601 corresponds to TensorFlow's.
+    channel_axis: the index of the channel axis.
+
+  Returns:
+    The grayscale image.
+  """
+  assert luma_standard in ["rec601", "rec709", "bt2001"]
+  if luma_standard == "rec601":
+    # TensorFlow's default.
+    rgb_weights = jnp.array([0.2989, 0.5870, 0.1140], dtype=image.dtype)
+  elif luma_standard == "rec709":
+    rgb_weights = jnp.array([0.2126, 0.7152, 0.0722], dtype=image.dtype)
+  else:
+    rgb_weights = jnp.array([0.2627, 0.6780, 0.0593], dtype=image.dtype)
+  grayscale = jnp.tensordot(image, rgb_weights, axes=(channel_axis, -1))
+  # Add back the channel axis.
+  grayscale = jnp.expand_dims(grayscale, axis=channel_axis)
+  if keep_dims:
+    if channel_axis < 0:
+      channel_axis += image.ndim
+    reps = [(1 if axis != channel_axis else 3) for axis in range(image.ndim)]
+    return jnp.tile(grayscale, reps)  # Tile to 3 along the channel axis.
+  else:
+    return grayscale

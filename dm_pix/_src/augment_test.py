@@ -132,24 +132,6 @@ class _ImageAugmentationTest(jtu.JaxTestCase, parameterized.TestCase):
 
   @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
                                   ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
-  def test_grayscale(self, images_list):
-    self._test_fn(
-        images_list,
-        jax_fn=augment.rgb_to_grayscale,
-        tf_fn=tf.image.rgb_to_grayscale)
-
-  @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
-                                  ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
-  def test_grayscale_keep_dims(self, images_list):
-    jax_fn = functools.partial(augment.rgb_to_grayscale, keep_dims=True)
-
-    def tf_fn(image):
-      return tf.image.grayscale_to_rgb(tf.image.rgb_to_grayscale(image))
-
-    self._test_fn(images_list, jax_fn=jax_fn, tf_fn=tf_fn)
-
-  @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
-                                  ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
   def test_rot90(self, images_list):
     self._test_fn(
         images_list,
