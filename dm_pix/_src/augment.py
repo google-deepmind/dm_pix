@@ -368,9 +368,9 @@ def random_crop(
   please use `jax.lax.dynamic_slice` and specify offsets and crop sizes.
 
   Args:
-    key : Key for pseudo-random number generator.
-    image : A JAX array which represents an image.
-    crop_sizes: A sequence of integers, each of which sequentially specifies the
+    key: key for pseudo-random number generator.
+    image: a JAX array which represents an image.
+    crop_sizes: a sequence of integers, each of which sequentially specifies the
       crop size along the corresponding dimension of the image. Sequence length
       must be identical to the rank of the image and the crop size should not be
       greater than the corresponding image dimension.
