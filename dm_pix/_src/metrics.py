@@ -20,7 +20,6 @@ shapes. Each image metric function returns a scalar for each image pair.
 import chex
 import jax
 import jax.numpy as jnp
-import jax.scipy as jsp
 
 
 def mae(a: chex.Array, b: chex.Array) -> chex.Numeric:
@@ -132,6 +131,7 @@ def ssim(
     k1: float = 0.01,
     k2: float = 0.03,
     return_map: bool = False,
+    precision=jax.lax.Precision.HIGHEST,
 ) -> chex.Numeric:
   """Computes the structural similarity index (SSIM) between image pairs.
 
@@ -156,6 +156,7 @@ def ssim(
     k1: One of the SSIM dampening parameters (> 0.).
     k2: One of the SSIM dampening parameters (> 0.).
     return_map: If True, will cause the per-pixel SSIM "map" to be returned.
+    precision: The numerical precision to use when performing convolution.
 
   Returns:
     Each image's mean SSIM, or a tensor of individual values if `return_map`.
@@ -171,20 +172,26 @@ def ssim(
   filt = jnp.exp(-0.5 * f_i)
   filt /= jnp.sum(filt)
 
-  # Blur in x and y (faster than the 2D convolution).
-  def convolve2d(z, f):
-    return jsp.signal.convolve2d(
-        z, f, mode="valid", precision=jax.lax.Precision.HIGHEST)
+  # Construct a 1D convolution.
+  filt_fn_1 = lambda z: jnp.convolve(z, filt, mode="valid", precision=precision)
+  filt_fn_vmap = jax.vmap(filt_fn_1)
 
-  filt_fn1 = lambda z: convolve2d(z, filt[:, jnp.newaxis])
-  filt_fn2 = lambda z: convolve2d(z, filt[jnp.newaxis, :])
+  # Apply the vectorized filter along the y axis.
+  def filt_fn_y(z):
+    z_flat = jnp.moveaxis(z, -3, -1).reshape((-1, z.shape[-3]))
+    z_filt_shape = ((z.shape[-4],) if z.ndim == 4 else
+                    ()) + (z.shape[-2], z.shape[-1], -1)
+    return jnp.moveaxis(filt_fn_vmap(z_flat).reshape(z_filt_shape), -1, -3)
 
-  # `vmap` the blurs to the tensor size, and then compose them.
-  num_dims = len(a.shape)
-  map_axes = tuple(list(range(num_dims - 3)) + [num_dims - 1])
-  filt_fn = lambda z: filt_fn1(filt_fn2(z))
-  for d in map_axes:
-    filt_fn = jax.vmap(filt_fn, in_axes=d, out_axes=d)
+  # Apply the vectorized filter along the x axis.
+  def filt_fn_x(z):
+    z_flat = jnp.moveaxis(z, -2, -1).reshape((-1, z.shape[-2]))
+    z_filt_shape = ((z.shape[-4],) if z.ndim == 4 else
+                    ()) + (z.shape[-2], z.shape[-1], -1)
+    return jnp.moveaxis(filt_fn_vmap(z_flat).reshape(z_filt_shape), -1, -2)
+
+  # Apply the blur in both x and y.
+  filt_fn = lambda z: filt_fn_y(filt_fn_x(z))
 
   mu0 = filt_fn(a)
   mu1 = filt_fn(b)
@@ -207,5 +214,5 @@ def ssim(
   numer = (2 * mu01 + c1) * (2 * sigma01 + c2)
   denom = (mu00 + mu11 + c1) * (sigma00 + sigma11 + c2)
   ssim_map = numer / denom
-  ssim_value = jnp.mean(ssim_map, list(range(num_dims - 3, num_dims)))
+  ssim_value = jnp.mean(ssim_map, list(range(-3, 0)))
   return ssim_map if return_map else ssim_value

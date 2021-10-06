@@ -64,46 +64,46 @@ class SSIMTests(chex.TestCase, jtu.JaxTestCase, absltest.TestCase):
     """Test that the SSIM implementation matches the Tensorflow version."""
 
     key = jax.random.PRNGKey(0)
-    shape = (2, 12, 12, 3)
-    for _ in range(4):
-      (max_val_key, img0_key, img1_key, filter_size_key, filter_sigma_key,
-       k1_key, k2_key, key) = jax.random.split(key, 8)
-      max_val = jax.random.uniform(max_val_key, minval=0.1, maxval=3.)
-      img0 = max_val * jax.random.uniform(img0_key, shape=shape)
-      img1 = max_val * jax.random.uniform(img1_key, shape=shape)
-      filter_size = jax.random.randint(
-          filter_size_key, shape=(), minval=1, maxval=10)
-      filter_sigma = jax.random.uniform(
-          filter_sigma_key, shape=(), minval=0.1, maxval=10.)
-      k1 = jax.random.uniform(k1_key, shape=(), minval=0.001, maxval=0.1)
-      k2 = jax.random.uniform(k2_key, shape=(), minval=0.001, maxval=0.1)
+    for shape in (2, 12, 12, 3), (12, 12, 3):
+      for _ in range(4):
+        (max_val_key, img0_key, img1_key, filter_size_key, filter_sigma_key,
+         k1_key, k2_key, key) = jax.random.split(key, 8)
+        max_val = jax.random.uniform(max_val_key, minval=0.1, maxval=3.)
+        img0 = max_val * jax.random.uniform(img0_key, shape=shape)
+        img1 = max_val * jax.random.uniform(img1_key, shape=shape)
+        filter_size = jax.random.randint(
+            filter_size_key, shape=(), minval=1, maxval=10)
+        filter_sigma = jax.random.uniform(
+            filter_sigma_key, shape=(), minval=0.1, maxval=10.)
+        k1 = jax.random.uniform(k1_key, shape=(), minval=0.001, maxval=0.1)
+        k2 = jax.random.uniform(k2_key, shape=(), minval=0.001, maxval=0.1)
 
-      ssim_gt = tf.image.ssim(
-          img0,
-          img1,
-          max_val,
-          filter_size=filter_size,
-          filter_sigma=filter_sigma,
-          k1=k1,
-          k2=k2).numpy()
-      for return_map in [False, True]:
-        ssim_fn = self.variant(
-            functools.partial(
-                metrics.ssim,
-                max_val=max_val,
-                filter_size=filter_size,
-                filter_sigma=filter_sigma,
-                k1=k1,
-                k2=k2,
-                return_map=return_map,
-            ))
-        ssim = ssim_fn(img0, img1)
-        if not return_map:
-          self.assertAllClose(ssim, ssim_gt)
-        else:
-          self.assertAllClose(np.mean(ssim, [1, 2, 3]), ssim_gt)
-        self.assertLessEqual(np.max(ssim), 1.)
-        self.assertGreaterEqual(np.min(ssim), -1.)
+        ssim_gt = tf.image.ssim(
+            img0,
+            img1,
+            max_val,
+            filter_size=filter_size,
+            filter_sigma=filter_sigma,
+            k1=k1,
+            k2=k2).numpy()
+        for return_map in [False, True]:
+          ssim_fn = self.variant(
+              functools.partial(
+                  metrics.ssim,
+                  max_val=max_val,
+                  filter_size=filter_size,
+                  filter_sigma=filter_sigma,
+                  k1=k1,
+                  k2=k2,
+                  return_map=return_map,
+              ))
+          ssim = ssim_fn(img0, img1)
+          if not return_map:
+            self.assertAllClose(ssim, ssim_gt)
+          else:
+            self.assertAllClose(np.mean(ssim, list(range(-3, 0))), ssim_gt)
+          self.assertLessEqual(np.max(ssim), 1.)
+          self.assertGreaterEqual(np.min(ssim), -1.)
 
   @chex.all_variants
   def test_ssim_lowerbound(self):
