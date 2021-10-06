@@ -64,7 +64,7 @@ class SSIMTests(chex.TestCase, jtu.JaxTestCase, absltest.TestCase):
     """Test that the SSIM implementation matches the Tensorflow version."""
 
     key = jax.random.PRNGKey(0)
-    for shape in (2, 12, 12, 3), (12, 12, 3):
+    for shape in ((2, 12, 12, 3), (12, 12, 3), (2, 12, 15, 3), (17, 12, 3)):
       for _ in range(4):
         (max_val_key, img0_key, img1_key, filter_size_key, filter_sigma_key,
          k1_key, k2_key, key) = jax.random.split(key, 8)
@@ -99,9 +99,13 @@ class SSIMTests(chex.TestCase, jtu.JaxTestCase, absltest.TestCase):
               ))
           ssim = ssim_fn(img0, img1)
           if not return_map:
-            self.assertAllClose(ssim, ssim_gt)
+            self.assertAllClose(ssim, ssim_gt, atol=1e-5, rtol=1e-5)
           else:
-            self.assertAllClose(np.mean(ssim, list(range(-3, 0))), ssim_gt)
+            self.assertAllClose(
+                np.mean(ssim, list(range(-3, 0))),
+                ssim_gt,
+                atol=1e-5,
+                rtol=1e-5)
           self.assertLessEqual(np.max(ssim), 1.)
           self.assertGreaterEqual(np.min(ssim), -1.)
 

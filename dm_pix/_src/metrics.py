@@ -187,7 +187,7 @@ def ssim(
   def filt_fn_x(z):
     z_flat = jnp.moveaxis(z, -2, -1).reshape((-1, z.shape[-2]))
     z_filt_shape = ((z.shape[-4],) if z.ndim == 4 else
-                    ()) + (z.shape[-2], z.shape[-1], -1)
+                    ()) + (z.shape[-3], z.shape[-1], -1)
     return jnp.moveaxis(filt_fn_vmap(z_flat).reshape(z_filt_shape), -1, -2)
 
   # Apply the blur in both x and y.
