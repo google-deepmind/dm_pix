@@ -37,7 +37,9 @@ def depth_to_space(inputs: chex.Array, block_size: int) -> chex.Array:
 
   height, width, depth = inputs.shape
   if depth % (block_size**2) != 0:
-    raise ValueError('Number of channels must be divisible by block_size ** 2.')
+    raise ValueError(
+        f'Number of channels {depth} must be divisible by block_size ** 2 {block_size**2}.'
+    )
   new_depth = depth // (block_size**2)
   outputs = jnp.reshape(inputs,
                         [height, width, block_size, block_size, new_depth])
@@ -67,9 +69,11 @@ def space_to_depth(inputs: chex.Array, block_size: int) -> chex.Array:
 
   height, width, depth = inputs.shape
   if height % block_size != 0:
-    raise ValueError('Height must be divisible by block size.')
+    raise ValueError(
+        f'Height {height} must be divisible by block size {block_size}.')
   if width % block_size != 0:
-    raise ValueError('Width must be divisible by block size.')
+    raise ValueError(
+        f'Width {width} must be divisible by block size {block_size}.')
   new_depth = depth * (block_size**2)
   new_height = height // block_size
   new_width = width // block_size
