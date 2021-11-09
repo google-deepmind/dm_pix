@@ -26,7 +26,7 @@ accelerator support.
 Then, install PIX using `pip`:
 
 ```bash
-$ pip install git+https://github.com/deepmind/dm_pix
+$ pip install dm-pix
 ```
 
 ## Quickstart
