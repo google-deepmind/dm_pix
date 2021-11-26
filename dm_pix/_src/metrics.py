@@ -94,7 +94,8 @@ def simse(a: chex.Array, b: chex.Array) -> chex.Numeric:
 
   For each image pair, a scaling factor for `b` is computed as the solution to
   the following problem:
-    min_alpha || vec(a) - alpha * vec(b) ||_2^2,
+
+    min_alpha || vec(a) - alpha * vec(b) ||_2^2
 
   where `a` and `b` are flattened, i.e., vec(x) = np.flatten(x). The MSE between
   the optimally scaled `b` and `a` is returned: mse(a, alpha*b).

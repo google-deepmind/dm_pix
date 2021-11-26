@@ -22,7 +22,7 @@ from dm_pix._src import patch
 
 __version__ = "0.3.0"
 
-# Augmentation.
+# Augmentations.
 adjust_brightness = augment.adjust_brightness
 adjust_contrast = augment.adjust_contrast
 adjust_gamma = augment.adjust_gamma
@@ -41,18 +41,18 @@ random_saturation = augment.random_saturation
 rot90 = augment.rot90
 solarize = augment.solarize
 
-# Color conversion.
+# Color conversions.
 hsl_to_rgb = color_conversion.hsl_to_rgb
 hsv_to_rgb = color_conversion.hsv_to_rgb
 rgb_to_hsl = color_conversion.rgb_to_hsl
 rgb_to_hsv = color_conversion.rgb_to_hsv
 rgb_to_grayscale = color_conversion.rgb_to_grayscale
 
-# Depth and space.
+# Depth and space transformations.
 depth_to_space = depth_and_space.depth_to_space
 space_to_depth = depth_and_space.space_to_depth
 
-# Interpolation.
+# Interpolation functions.
 flat_nd_linear_interpolate = interpolation.flat_nd_linear_interpolate
 
 # Metrics.
@@ -63,7 +63,7 @@ rmse = metrics.rmse
 simse = metrics.simse
 ssim = metrics.ssim
 
-# Patch.
+# Patch extraction functions.
 extract_patches = patch.extract_patches
 
 del augment, color_conversion, depth_and_space, interpolation, metrics, patch

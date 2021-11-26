@@ -28,8 +28,8 @@ def depth_to_space(inputs: chex.Array, block_size: int) -> chex.Array:
 
   Returns:
     For inputs of shape [H, W, C] the output is a reshaped array of shape
-      [H * B, W * B, C / (B ** 2)], where B is `block_size`. If there's a
-      leading batch dimension, it stays unchanged.
+    [H * B, W * B, C / (B ** 2)], where B is `block_size`. If there's a leading
+    batch dimension, it stays unchanged.
   """
   chex.assert_rank(inputs, {3, 4})
   if inputs.ndim == 4:  # Batched case.
@@ -53,6 +53,7 @@ def space_to_depth(inputs: chex.Array, block_size: int) -> chex.Array:
   """Rearranges data from blocks of spatial data into depth.
 
   This is the reverse of depth_to_space.
+
   Args:
     inputs: Array of shape [H, W, C] or [N, H, W, C]. The height and width must
       each be divisible by block_size.
@@ -60,8 +61,8 @@ def space_to_depth(inputs: chex.Array, block_size: int) -> chex.Array:
 
   Returns:
     For inputs of shape [H, W, C] the output is a reshaped array of shape
-      [H / B, W / B, C * (B ** 2)], where B is `block_size`. If there's a
-      leading batch dimension, it stays unchanged.
+    [H / B, W / B, C * (B ** 2)], where B is `block_size`. If there's a leading
+    batch dimension, it stays unchanged.
   """
   chex.assert_rank(inputs, {3, 4})
   if inputs.ndim == 4:  # Batched case.

@@ -18,20 +18,12 @@ import inspect
 from absl.testing import absltest
 from absl.testing import parameterized
 import dm_pix as pix
-
-
-def named_pix_functions():
-  fns = []
-  for name in dir(pix):
-    o = getattr(pix, name)
-    if inspect.isfunction(o):
-      fns.append((name, o))
-  return fns
+from dm_pix._src import test_utils
 
 
 class ApiTest(parameterized.TestCase):
 
-  @parameterized.named_parameters(*named_pix_functions())
+  @parameterized.named_parameters(*test_utils.get_public_functions(pix))
   def test_key_argument(self, f):
     sig = inspect.signature(f)
     param_names = tuple(sig.parameters)
@@ -42,7 +34,7 @@ class ApiTest(parameterized.TestCase):
           param_names.index("key"), param_names.index("image"),
           "RNG `key` argument should be before `image` in PIX.")
 
-  @parameterized.named_parameters(*named_pix_functions())
+  @parameterized.named_parameters(*test_utils.get_public_functions(pix))
   def test_kwarg_only_defaults(self, f):
     argspec = inspect.getfullargspec(f)
     if f.__name__ == "rot90":
