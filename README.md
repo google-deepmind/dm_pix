@@ -2,9 +2,9 @@
 
 PIX is an image processing library in [JAX], for [JAX].
 
-[![GitHub Workflow CI](https://img.shields.io/github/workflow/status/deepmind/dm_pix/ci?label=Python&logo=python&logoColor=white&style=flat-square)](https://github.com/deepmind/dm_pix/actions/workflows/ci.yml)
+[![GitHub Workflow CI](https://img.shields.io/github/workflow/status/deepmind/dm_pix/ci?label=pytest&logo=python&logoColor=white&style=flat-square)](https://github.com/deepmind/dm_pix/actions/workflows/ci.yml)
 [![Read the Docs](https://img.shields.io/readthedocs/dm_pix?label=ReadTheDocs&logo=readthedocs&logoColor=white&style=flat-square)](https://dm-pix.readthedocs.io/en/latest/?badge=latest)
-[![GitHub Workflow PyPi](https://img.shields.io/github/workflow/status/deepmind/dm_pix/pypi?label=PyPi&logo=pypi&logoColor=white&style=flat-square)](https://pypi.org/project/dm-pix/)
+[![PyPI](https://img.shields.io/pypi/v/dm_pix?logo=pypi&logoColor=white&style=flat-square)](https://pypi.org/project/dm-pix/)
 
 ## Overview
 
