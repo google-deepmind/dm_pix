@@ -13,3 +13,4 @@ Then, to run the examples, you can simply run the following commands:
 $ cd examples/
 $ python image_augmentation.py
 ```
+You can also view an interactive version of the examples on [google colab](https://colab.research.google.com/drive/1EJG6VNhH5aJNy9sT7jUQkgYP5GeGPUvw?usp=sharing)
