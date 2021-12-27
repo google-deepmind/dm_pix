@@ -13,3 +13,4 @@ Then, to run the examples, you can simply run the following commands:
 $ cd examples/
 $ python image_augmentation.py
 ```
+You can also view an interactive version of the examples on [Colab](./image_augmentation.ipynb).
