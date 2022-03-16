@@ -16,12 +16,11 @@
 from absl.testing import parameterized
 import chex
 from dm_pix._src import depth_and_space
-import jax.test_util as jtu
 import numpy as np
 import tensorflow as tf
 
 
-class DepthAndSpaceTest(chex.TestCase, jtu.JaxTestCase, parameterized.TestCase):
+class DepthAndSpaceTest(chex.TestCase, parameterized.TestCase):
 
   @chex.all_variants
   @parameterized.parameters(([1, 1, 1, 9], 3), ([2, 2, 2, 8], 2))
@@ -32,7 +31,7 @@ class DepthAndSpaceTest(chex.TestCase, jtu.JaxTestCase, parameterized.TestCase):
     inputs = np.reshape(inputs, input_shape)
     output_tf = tf.nn.depth_to_space(inputs, block_size).numpy()
     output_jax = depth_to_space_fn(inputs, block_size)
-    self.assertArraysEqual(output_tf, output_jax)
+    np.testing.assert_array_equal(output_tf, output_jax)
 
   @chex.all_variants
   @parameterized.parameters(([1, 3, 3, 1], 3), ([2, 4, 4, 2], 2))
@@ -43,7 +42,7 @@ class DepthAndSpaceTest(chex.TestCase, jtu.JaxTestCase, parameterized.TestCase):
     inputs = np.reshape(inputs, input_shape)
     output_tf = tf.nn.space_to_depth(inputs, block_size).numpy()
     output_jax = space_to_depth_fn(inputs, block_size)
-    self.assertArraysEqual(output_tf, output_jax)
+    np.testing.assert_array_equal(output_tf, output_jax)
 
 
 if __name__ == "__main__":

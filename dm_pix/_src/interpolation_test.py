@@ -20,7 +20,7 @@ from absl.testing import parameterized
 import chex
 from dm_pix._src import interpolation
 import jax.numpy as jnp
-import jax.test_util as jtu
+import numpy as np
 
 _SHAPE_COORDS = ((1, 1), (1, 3), (3, 2), (4, 4), (4, 1, 4), (4, 2, 2))
 
@@ -121,21 +121,22 @@ def _prepare_expected(shape_coordinates: Sequence[int]) -> jnp.ndarray:
   return out
 
 
-class InterpolationTest(chex.TestCase, jtu.JaxTestCase, parameterized.TestCase):
+class InterpolationTest(chex.TestCase, parameterized.TestCase):
 
   @chex.all_variants
-  @parameterized.named_parameters(
-      jtu.cases_from_list(
-          dict(testcase_name=f"_{shape}_coords", shape_coordinates=shape)
-          for shape in _SHAPE_COORDS))
+  @parameterized.named_parameters([
+      dict(testcase_name=f"_{shape}_coords", shape_coordinates=shape)
+      for shape in _SHAPE_COORDS
+  ])
   def test_flat_nd_linear_interpolate(self, shape_coordinates):
     volume, coords = _prepare_inputs(shape_coordinates)
     expected = _prepare_expected(shape_coordinates)
 
     flat_nd_linear_interpolate = self.variant(
         interpolation.flat_nd_linear_interpolate)
-    self.assertAllClose(flat_nd_linear_interpolate(volume, coords), expected)
-    self.assertAllClose(
+    np.testing.assert_allclose(
+        flat_nd_linear_interpolate(volume, coords), expected)
+    np.testing.assert_allclose(
         flat_nd_linear_interpolate(
             volume.flatten(), coords, unflattened_vol_shape=volume.shape),
         expected)

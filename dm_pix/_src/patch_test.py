@@ -19,7 +19,6 @@ from absl.testing import absltest
 from absl.testing import parameterized
 import chex
 from dm_pix._src import patch
-import jax.test_util as jtu
 import numpy as np
 import tensorflow as tf
 
@@ -29,7 +28,7 @@ def _create_test_images(shape):
   return np.reshape(images, shape)
 
 
-class PatchTest(chex.TestCase, jtu.JaxTestCase, parameterized.TestCase):
+class PatchTest(chex.TestCase, parameterized.TestCase):
 
   @chex.all_variants
   @parameterized.named_parameters(
@@ -60,7 +59,7 @@ class PatchTest(chex.TestCase, jtu.JaxTestCase, parameterized.TestCase):
         rates=rates,
         padding=padding,
     )
-    self.assertArraysEqual(jax_patches, tf_patches.numpy())
+    np.testing.assert_array_equal(jax_patches, tf_patches.numpy())
 
   @chex.all_variants
   @parameterized.product(

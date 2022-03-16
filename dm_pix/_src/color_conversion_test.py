@@ -23,7 +23,6 @@ import chex
 from dm_pix._src import color_conversion
 import jax
 import jax.numpy as jnp
-import jax.test_util as jtu
 import numpy as np
 import tensorflow as tf
 
@@ -57,7 +56,6 @@ def generate_test_images(
 
 class ColorConversionTest(
     chex.TestCase,
-    jtu.JaxTestCase,
     parameterized.TestCase,
 ):
 
@@ -84,7 +82,7 @@ class ColorConversionTest(
       rgb_jax = hsv_to_rgb(hsv)
       if not channel_last:
         rgb_jax = rgb_jax.swapaxes(-1, -3)
-      self.assertAllClose(rgb_jax, rgb_tf, rtol=1e-3, atol=1e-3)
+      np.testing.assert_allclose(rgb_jax, rgb_tf, rtol=1e-3, atol=1e-3)
 
   @chex.all_variants
   @parameterized.product(
@@ -108,7 +106,7 @@ class ColorConversionTest(
       hsv_jax = rgb_to_hsv(rgb)
       if not channel_last:
         hsv_jax = hsv_jax.swapaxes(-1, -3)
-      self.assertAllClose(hsv_jax, hsv_tf, rtol=1e-3, atol=1e-3)
+      np.testing.assert_allclose(hsv_jax, hsv_tf, rtol=1e-3, atol=1e-3)
 
   @chex.all_variants
   def test_vmap_roundtrip(self):
@@ -118,14 +116,14 @@ class ColorConversionTest(
     hsv_to_rgb = self.variant(jax.vmap(color_conversion.hsv_to_rgb))
     hsv = rgb_to_hsv(rgb_init)
     rgb_final = hsv_to_rgb(hsv)
-    self.assertAllClose(rgb_init, rgb_final, rtol=1e-3, atol=1e-3)
+    np.testing.assert_allclose(rgb_init, rgb_final, rtol=1e-3, atol=1e-3)
 
   def test_jit_roundtrip(self):
     images = generate_test_images(*TestImages.RAND_FLOATS_IN_RANGE.value)
     rgb_init = np.stack(images, axis=0)
     hsv = jax.jit(color_conversion.rgb_to_hsv)(rgb_init)
     rgb_final = jax.jit(color_conversion.hsv_to_rgb)(hsv)
-    self.assertAllClose(rgb_init, rgb_final, rtol=1e-3, atol=1e-3)
+    np.testing.assert_allclose(rgb_init, rgb_final, rtol=1e-3, atol=1e-3)
 
   @chex.all_variants
   @parameterized.named_parameters(
@@ -158,7 +156,8 @@ class ColorConversionTest(
       image_rgb = np.reshape(image_rgb, _IMG_SHAPE)
       hsl_true = np.reshape(hsl_true, _IMG_SHAPE)
       rgb_to_hsl = self.variant(color_conversion.rgb_to_hsl)
-      self.assertAllClose(rgb_to_hsl(image_rgb), hsl_true)
+      np.testing.assert_allclose(
+          rgb_to_hsl(image_rgb), hsl_true, atol=1E-5, rtol=1E-5)
 
   @chex.all_variants
   @parameterized.named_parameters(
@@ -202,7 +201,8 @@ class ColorConversionTest(
       rgb_true = np.reshape(rgb_true, _IMG_SHAPE)
       image_hsl = np.reshape(image_hsl, _IMG_SHAPE)
       hsl_to_rgb = self.variant(color_conversion.hsl_to_rgb)
-      self.assertAllClose(hsl_to_rgb(image_hsl), rgb_true)
+      np.testing.assert_allclose(
+          hsl_to_rgb(image_hsl), rgb_true, atol=1E-5, rtol=1E-5)
 
   @chex.all_variants
   def test_hsl_rgb_roundtrip(self):
@@ -217,7 +217,8 @@ class ColorConversionTest(
 
       rgb_to_hsl = self.variant(color_conversion.rgb_to_hsl)
       hsl_to_rgb = self.variant(color_conversion.hsl_to_rgb)
-      self.assertAllClose(image_rgb, hsl_to_rgb(rgb_to_hsl(image_rgb)))
+      np.testing.assert_allclose(
+          image_rgb, hsl_to_rgb(rgb_to_hsl(image_rgb)), atol=1E-5, rtol=1E-5)
 
   @chex.all_variants
   @parameterized.product(
@@ -246,9 +247,11 @@ class ColorConversionTest(
         grayscale_jax = grayscale_jax.swapaxes(-1, -3)
       if keep_dims:
         for i in range(_IMG_SHAPE[-1]):
-          self.assertAllClose(grayscale_jax[..., [i]], grayscale_tf)
+          np.testing.assert_allclose(
+              grayscale_jax[..., [i]], grayscale_tf, atol=1E-5, rtol=1E-5)
       else:
-        self.assertAllClose(grayscale_jax, grayscale_tf)
+        np.testing.assert_allclose(
+            grayscale_jax, grayscale_tf, atol=1E-5, rtol=1E-5)
 
 
 if __name__ == "__main__":

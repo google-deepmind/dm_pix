@@ -19,12 +19,11 @@ from absl.testing import absltest
 import chex
 from dm_pix._src import metrics
 import jax
-import jax.test_util as jtu
 import numpy as np
 import tensorflow as tf
 
 
-class MSETest(chex.TestCase, jtu.JaxTestCase, absltest.TestCase):
+class MSETest(chex.TestCase, absltest.TestCase):
 
   def setUp(self):
     super().setUp()
@@ -48,16 +47,16 @@ class MSETest(chex.TestCase, jtu.JaxTestCase, absltest.TestCase):
     psnr = self.variant(metrics.psnr)
     values_jax = psnr(self._img1, self._img2)
     values_tf = tf.image.psnr(self._img1, self._img2, max_val=1.).numpy()
-    self.assertAllClose(values_jax, values_tf, rtol=1e-3, atol=1e-3)
+    np.testing.assert_allclose(values_jax, values_tf, rtol=1e-3, atol=1e-3)
 
   @chex.all_variants
   def test_simse_invariance(self):
     simse = self.variant(metrics.simse)
     simse_jax = simse(self._img1, self._img1 * 2.0)
-    self.assertAllClose(simse_jax, np.zeros(4), rtol=1e-6, atol=1e-6)
+    np.testing.assert_allclose(simse_jax, np.zeros(4), rtol=1e-6, atol=1e-6)
 
 
-class SSIMTests(chex.TestCase, jtu.JaxTestCase, absltest.TestCase):
+class SSIMTests(chex.TestCase, absltest.TestCase):
 
   @chex.all_variants
   def test_ssim_golden(self):
@@ -99,9 +98,9 @@ class SSIMTests(chex.TestCase, jtu.JaxTestCase, absltest.TestCase):
               ))
           ssim = ssim_fn(img0, img1)
           if not return_map:
-            self.assertAllClose(ssim, ssim_gt, atol=1e-5, rtol=1e-5)
+            np.testing.assert_allclose(ssim, ssim_gt, atol=1e-5, rtol=1e-5)
           else:
-            self.assertAllClose(
+            np.testing.assert_allclose(
                 np.mean(ssim, list(range(-3, 0))),
                 ssim_gt,
                 atol=1e-5,
@@ -126,7 +125,7 @@ class SSIMTests(chex.TestCase, jtu.JaxTestCase, absltest.TestCase):
             k2=eps,
         ))
     ssim = ssim_fn(img, -img)
-    self.assertAllClose(ssim, -np.ones_like(ssim))
+    np.testing.assert_allclose(ssim, -np.ones_like(ssim), atol=1E-5, rtol=1E-5)
 
 
 if __name__ == "__main__":

@@ -19,7 +19,6 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from dm_pix._src import augment
 import jax
-import jax.test_util as jtu
 import numpy as np
 import tensorflow as tf
 
@@ -31,7 +30,7 @@ _RAND_FLOATS_OUT_OF_RANGE = list(
 _KERNEL_SIZE = _IMG_SHAPE[0] / 10.
 
 
-class _ImageAugmentationTest(jtu.JaxTestCase, parameterized.TestCase):
+class _ImageAugmentationTest(parameterized.TestCase):
   """Runs tests for the various augments with the correct arguments."""
 
   def _test_fn_with_random_arg(self, images_list, jax_fn, tf_fn, **kw_range):
@@ -43,7 +42,8 @@ class _ImageAugmentationTest(jtu.JaxTestCase, parameterized.TestCase):
   def assertAllCloseTolerant(self, x, y):
     # Increase tolerance on TPU due to lower precision.
     tol = 1e-2 if jax.local_devices()[0].platform == "tpu" else 1e-4
-    super().assertAllClose(x, y, rtol=tol, atol=tol)
+    np.testing.assert_allclose(x, y, rtol=tol, atol=tol)
+    self.assertEqual(x.dtype, y.dtype)
 
   @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
                                   ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
