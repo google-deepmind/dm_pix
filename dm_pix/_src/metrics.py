@@ -205,8 +205,9 @@ def ssim(
 
   # Clip the variances and covariances to valid values.
   # Variance must be non-negative:
-  sigma00 = jnp.maximum(0., sigma00)
-  sigma11 = jnp.maximum(0., sigma11)
+  epsilon = jnp.finfo(jnp.float32).eps**2
+  sigma00 = jnp.maximum(epsilon, sigma00)
+  sigma11 = jnp.maximum(epsilon, sigma11)
   sigma01 = jnp.sign(sigma01) * jnp.minimum(
       jnp.sqrt(sigma00 * sigma11), jnp.abs(sigma01))
 

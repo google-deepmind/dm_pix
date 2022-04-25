@@ -127,6 +127,13 @@ class SSIMTests(chex.TestCase, absltest.TestCase):
     ssim = ssim_fn(img, -img)
     np.testing.assert_allclose(ssim, -np.ones_like(ssim), atol=1E-5, rtol=1E-5)
 
+  @chex.all_variants
+  def test_ssim_finite_grad(self):
+    """Test that SSIM produces a finite gradient on large flat regions."""
+    img = np.zeros((64, 64, 3))
+    grad = self.variant(jax.grad(metrics.ssim))(img, img)
+    np.testing.assert_equal(grad, np.zeros_like(grad))
+
 
 if __name__ == "__main__":
   absltest.main()
