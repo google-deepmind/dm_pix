@@ -295,16 +295,60 @@ def solarize(image: chex.Array, threshold: chex.Numeric) -> chex.Array:
   return jnp.where(image < threshold, image, 1. - image)
 
 
-def random_flip_left_right(key: chex.PRNGKey, image: chex.Array) -> chex.Array:
-  """50% chance of `flip_left_right(...)` otherwise returns image unchanged."""
-  coin_flip = jax.random.bernoulli(key)
-  return jax.lax.cond(coin_flip, flip_left_right, lambda x: x, image)
+def random_flip_left_right(
+    key: chex.PRNGKey,
+    image: chex.Array,
+    *,
+    probability: chex.Numeric = .5
+) -> chex.Array:
+  """Applies `flip_left_right(...)` or not with a given probability.
+
+  If the number drawn from a uniform [0, 1] falls bellow the given probability
+  it applies `flip_up_down(...)` to the image, otherwise returns original image.
+
+  Args:
+    key: key for pseudo-random number generator.
+    image: a JAX array which represents an image.
+    probability: the probability of applying flip_up_down transform. Must be a
+      value between 0 and 1. Default is .5 representing a coin-flip.
+
+  Returns:
+    A left-right flipped image if condition is met, otherwise original image.
+  """
+  drawn_value = jax.random.uniform(key)
+  return jax.lax.cond(
+      drawn_value < probability,
+      flip_left_right,
+      lambda x: x,
+      image)
 
 
-def random_flip_up_down(key: chex.PRNGKey, image: chex.Array) -> chex.Array:
-  """50% chance of `flip_up_down(...)` otherwise returns image unchanged."""
-  coin_flip = jax.random.bernoulli(key)
-  return jax.lax.cond(coin_flip, flip_up_down, lambda x: x, image)
+def random_flip_up_down(
+    key: chex.PRNGKey,
+    image: chex.Array,
+    *,
+    probability: chex.Numeric = .5
+) -> chex.Array:
+  """Applies `flip_up_down(...)` or not with a given probability.
+
+  If the number drawn from a uniform [0, 1] falls bellow the given probability
+  it applies `flip_up_down(...)` to the image, otherwise returns original image.
+
+  Args:
+    key: key for pseudo-random number generator.
+    image: a JAX array which represents an image.
+    probability: the probability of applying flip_up_down transform. Must be a
+      value between 0 and 1. Default is .5 representing a coin-flip.
+
+  Returns:
+    An up-down flipped image if condition is met, otherwise original image.
+  """
+  drawn_value = jax.random.uniform(key)
+  return jax.lax.cond(
+      drawn_value < probability,
+      flip_up_down,
+      lambda x: x,
+      image)
 
 
 def random_brightness(
