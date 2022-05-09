@@ -309,8 +309,8 @@ def random_flip_left_right(
   Args:
     key: key for pseudo-random number generator.
     image: a JAX array which represents an image.
-    probability: the probability of applying flip_up_down transform. Must be a
-      value between 0 and 1. Default is .5 representing a coin-flip.
+    probability: the probability of applying flip_left_right transform. Must 
+      be a value between 0 and 1. Default is .5 representing a coin-flip.
 
   Returns:
     A left-right flipped image if condition is met, otherwise original image.
