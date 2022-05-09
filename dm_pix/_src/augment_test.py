@@ -21,7 +21,6 @@ from dm_pix._src import augment
 import jax
 import numpy as np
 import tensorflow as tf
-import inspect
 
 _IMG_SHAPE = (131, 111, 3)
 _RAND_FLOATS_IN_RANGE = list(
