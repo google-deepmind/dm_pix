@@ -309,7 +309,7 @@ def random_flip_left_right(
   Args:
     key: a JAX RNG key.
     image: a JAX array which represents an image. Assumes that the image is
-      either ...HWC or ...CHW and flips the W axis.
+      either ...HWC or ...CHW.
     probability: the probability of applying flip_left_right transform. Must be
       a value in [0, 1].
 
@@ -338,7 +338,7 @@ def random_flip_up_down(
   Args:
     key: a JAX RNG key.
     image: a JAX array which represents an image. Assumes that the image is 
-      either ...HWC or ...CHW and flips the W axis.
+      either ...HWC or ...CHW.
     probability: the probability of applying flip_up_down transform. Must be a
       value in [0, 1].
 
