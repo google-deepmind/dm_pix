@@ -166,6 +166,16 @@ class _ImageAugmentationTest(parameterized.TestCase):
         images_list,
         jax_fn=functools.partial(augment.random_flip_up_down, key),
         tf_fn=None)
+    self._test_fn_with_random_arg(
+        images_list,
+        jax_fn=functools.partial(augment.random_flip_left_right, key),
+        tf_fn=None,
+        probability=(0., 1.))
+    self._test_fn_with_random_arg(
+        images_list,
+        jax_fn=functools.partial(augment.random_flip_up_down, key),
+        tf_fn=None,
+        probability=(0., 1.))
 
   @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
                                   ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
@@ -221,7 +231,8 @@ class TestVmap(_ImageAugmentationTest):
     ]
     fn_vmap = jax.vmap(jax_fn)
     outputs_vmaped = list(
-        fn_vmap(np.stack(images_list, axis=0), np.stack(arguments, axis=0)))
+        fn_vmap(np.stack(images_list, axis=0),
+        **{kw_name: np.stack(arguments, axis=0)}))
     assert len(images_list) == len(outputs_vmaped)
     assert len(images_list) == len(arguments)
     for image_rgb, argument, adjusted_vmap in zip(images_list, arguments,
@@ -248,7 +259,7 @@ class TestJit(_ImageAugmentationTest):
     jax_fn_jitted = jax.jit(jax_fn)
     for image_rgb in images_list:
       argument = np.random.uniform(random_min, random_max, size=())
-      adjusted_jax = jax_fn(image_rgb, argument)
+      adjusted_jax = jax_fn(image_rgb, **{kw_name: argument})
       adjusted_jit = jax_fn_jitted(image_rgb, **{kw_name: argument})
       self.assertAllCloseTolerant(adjusted_jax, adjusted_jit)
 
