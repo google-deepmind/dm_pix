@@ -299,7 +299,7 @@ def random_flip_left_right(
     key: chex.PRNGKey,
     image: chex.Array,
     *,
-    probability: chex.Numeric = .5,
+    probability: chex.Numeric = 0.5,
 ) -> chex.Array:
   """Applies `flip_left_right(...)` with a given probability.
 
@@ -328,7 +328,7 @@ def random_flip_up_down(
     key: chex.PRNGKey,
     image: chex.Array,
     *,
-    probability: chex.Numeric = .5,
+    probability: chex.Numeric = 0.5,
 ) -> chex.Array:
   """Applies `flip_up_down(...)` with a given probability.
 
