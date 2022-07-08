@@ -28,6 +28,7 @@ adjust_contrast = augment.adjust_contrast
 adjust_gamma = augment.adjust_gamma
 adjust_hue = augment.adjust_hue
 adjust_saturation = augment.adjust_saturation
+affine_transform = augment.affine_transform
 flip_left_right = augment.flip_left_right
 flip_up_down = augment.flip_up_down
 gaussian_blur = augment.gaussian_blur
@@ -74,6 +75,7 @@ __all__ = (
     "adjust_gamma",
     "adjust_hue",
     "adjust_saturation",
+    "affine_transform",
     "depth_to_space",
     "extract_patches",
     "flat_nd_linear_interpolate",

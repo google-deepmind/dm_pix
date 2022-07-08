@@ -10,6 +10,7 @@ Augmentations
     adjust_gamma
     adjust_hue
     adjust_saturation
+    affine_transform
     flip_left_right
     flip_up_down
     gaussian_blur
@@ -47,6 +48,11 @@ adjust_saturation
 ~~~~~~~~~~~~~~~~~
 
 .. autofunction:: adjust_saturation
+
+affine_transform
+~~~~~~~~~~~~~~~~~
+
+.. autofunction:: affine_transform
 
 flip_left_right
 ~~~~~~~~~~~~~~~
