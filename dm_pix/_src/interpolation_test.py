@@ -13,6 +13,7 @@
 # limitations under the License.
 """Tests for dm_pix._src.interpolation."""
 
+import itertools
 from typing import Sequence, Tuple
 
 from absl.testing import absltest
@@ -23,6 +24,7 @@ import jax.numpy as jnp
 import numpy as np
 
 _SHAPE_COORDS = ((1, 1), (1, 3), (3, 2), (4, 4), (4, 1, 4), (4, 2, 2))
+_CVALS = (0.0, 1.0, -2.0)
 
 
 def _prepare_inputs(
@@ -90,9 +92,9 @@ def _prepare_inputs(
     try:
       # In this case, try reshaping the _TEMPLATE_COORDS to the desired shape.
       coordinates = jnp.reshape(template_coords, shape_output_coordinates)
-    except TypeError:
+    except TypeError as e:
       raise ValueError(f"Unsupported shape_output_coordinates = "
-                       f"{shape_output_coordinates}")
+                       f"{shape_output_coordinates}") from e
 
   return volume, coordinates
 
@@ -113,8 +115,31 @@ def _prepare_expected(shape_coordinates: Sequence[int]) -> jnp.ndarray:
     try:
       out = jnp.array([4.922847, 3.128356, 3.4009826, 0.88441014])
       out = jnp.reshape(out, shape_coordinates[1:])
-    except TypeError:
-      raise ValueError(f"Unsupported shape_coordinates = {shape_coordinates}")
+    except TypeError as e:
+      raise ValueError(
+          f"Unsupported shape_coordinates = {shape_coordinates}") from e
+  else:
+    raise ValueError(f"Unsupported shape_coordinates = {shape_coordinates}")
+
+  return out
+
+
+def _prepare_expected_const(shape_coordinates: Sequence[int],
+                            cval: float) -> jnp.ndarray:
+  if len(shape_coordinates) == 2:
+    if tuple(shape_coordinates) == (3, 2):
+      out = jnp.array([cval, 1.836134])
+    elif shape_coordinates[0] == 4:
+      out = jnp.array([cval, 3.128356, cval, cval])
+    else:
+      return _prepare_expected(shape_coordinates)
+  elif shape_coordinates[0] == 4:
+    try:
+      out = jnp.array([cval, 3.128356, cval, cval])
+      out = jnp.reshape(out, shape_coordinates[1:])
+    except TypeError as e:
+      raise ValueError(
+          f"Unsupported shape_coordinates = {shape_coordinates}") from e
   else:
     raise ValueError(f"Unsupported shape_coordinates = {shape_coordinates}")
 
@@ -140,6 +165,27 @@ class InterpolationTest(chex.TestCase, parameterized.TestCase):
         flat_nd_linear_interpolate(
             volume.flatten(), coords, unflattened_vol_shape=volume.shape),
         expected)
+
+  @chex.all_variants
+  @parameterized.named_parameters([
+      (f"_{shape}_coords_{cval}_cval", shape, cval)
+      for cval, shape in itertools.product(_CVALS, _SHAPE_COORDS)
+  ])
+  def test_flat_nd_linear_interpolate_constant(self, shape_coordinates, cval):
+    volume, coords = _prepare_inputs(shape_coordinates)
+    expected = _prepare_expected_const(shape_coordinates, cval)
+
+    flat_nd_linear_interpolate_constant = self.variant(
+        interpolation.flat_nd_linear_interpolate_constant)
+    np.testing.assert_allclose(
+        flat_nd_linear_interpolate_constant(volume, coords, cval=cval),
+        expected)
+    np.testing.assert_allclose(
+        flat_nd_linear_interpolate_constant(
+            volume.flatten(),
+            coords,
+            cval=cval,
+            unflattened_vol_shape=volume.shape), expected)
 
 
 if __name__ == "__main__":

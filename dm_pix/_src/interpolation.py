@@ -161,3 +161,50 @@ def flat_nd_linear_interpolate(
       coordinates, shape=unflattened_vol_shape)
   return _linear_interpolate_using_indices_nd(
       jnp.asarray(volume), indices, weights)
+
+
+def flat_nd_linear_interpolate_constant(
+    volume: chex.Array,
+    coordinates: chex.Array,
+    *,
+    cval: Optional[float] = 0.,
+    unflattened_vol_shape: Optional[Sequence[int]] = None,
+) -> chex.Array:
+  """Maps volume by interpolation and returns a constant outside boundaries.
+
+  Maps the input ND volume to coordinates by linear interpolation, but returns
+  a constant value if the coordinates fall outside the volume boundary.
+
+  Args:
+    volume: A volume (flat if `unflattened_vol_shape` is provided) where to
+      query coordinates.
+    coordinates: An array of shape (N, M_coordinates). Where M_coordinates can
+      be M-dimensional. If M_coordinates == 1, then `coordinates.shape` can
+      simply be (N,), e.g. if N=3 and M_coordinates=1, this has the form (z, y,
+      x).
+    cval: A constant value to map to for coordinates that fall outside
+      the volume boundaries.
+    unflattened_vol_shape: The shape of the `volume` before flattening. If
+      provided, then `volume` must be pre-flattened.
+
+  Returns:
+    The resulting mapped coordinates. The shape of the output is `M_coordinates`
+    (derived from `coordinates` by dropping the first axis).
+  """
+  volume_shape = volume.shape
+  if unflattened_vol_shape is not None:
+    volume_shape = unflattened_vol_shape
+
+  # Initialize considering all coordinates within the volume and loop through
+  # boundaries.
+  is_in_bounds = jnp.full(coordinates.shape[1:], True)
+  for dim, dim_size in enumerate(volume_shape):
+    is_in_bounds = jnp.logical_and(is_in_bounds, coordinates[dim] >= 0)
+    is_in_bounds = jnp.logical_and(is_in_bounds,
+                                   coordinates[dim] <= dim_size - 1)
+
+  return flat_nd_linear_interpolate(
+      volume,
+      coordinates,
+      unflattened_vol_shape=unflattened_vol_shape
+  ) * is_in_bounds + (1. - is_in_bounds) * cval

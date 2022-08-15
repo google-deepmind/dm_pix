@@ -35,8 +35,8 @@ _KERNEL_SIZE = _IMG_SHAPE[0] / 10.
 class _ImageAugmentationTest(parameterized.TestCase):
   """Runs tests for the various augments with the correct arguments."""
 
-  def _test_fn_with_random_arg(
-      self, images_list, jax_fn, reference_fn, **kw_range):
+  def _test_fn_with_random_arg(self, images_list, jax_fn, reference_fn,
+                               **kw_range):
     pass
 
   def _test_fn(self, images_list, jax_fn, reference_fn):
@@ -182,8 +182,9 @@ class _ImageAugmentationTest(parameterized.TestCase):
         reference_fn=None,
         probability=(0., 1.))
 
-  # Due to a bug in scipy we cannot test all available modes, refer to this
-  # issue for more information: https://github.com/google/jax/issues/11097
+  # Due to a bug in scipy we cannot test all available modes, refer to these
+  # issues for more information: https://github.com/google/jax/issues/11097,
+  # https://github.com/google/jax/issues/11097
   @parameterized.named_parameters(
       ("in_range_nearest_0", _RAND_FLOATS_IN_RANGE, "nearest", 0),
       ("in_range_nearest_1", _RAND_FLOATS_IN_RANGE, "nearest", 1),
@@ -205,8 +206,8 @@ class _ImageAugmentationTest(parameterized.TestCase):
             mode=mode))
 
     # (ndim, ndim) with offset
-    matrix = jnp.array([[-0.5, 0.2, 0], [0.8, 0.5, 0], [0, 0, 1]])
-    offset = jnp.array([40., 32, 0])
+    matrix = jnp.array([[-0.5, 0.2, 0.], [0.8, 0.5, 0.], [0., 0., 1.]])
+    offset = jnp.array([40., 32., 0.])
     self._test_fn(
         images_list,
         jax_fn=functools.partial(
@@ -223,8 +224,8 @@ class _ImageAugmentationTest(parameterized.TestCase):
             mode=mode))
 
     # (ndim + 1, ndim + 1)
-    matrix = jnp.array(
-        [[0.4, 0.2, 0, -10], [0.2, -0.5, 0, 5], [0, 0, 1, 0], [0, 0, 0, 1]])
+    matrix = jnp.array([[0.4, 0.2, 0, -10], [0.2, -0.5, 0, 5], [0, 0, 1, 0],
+                        [0, 0, 0, 1]])
     self._test_fn(
         images_list,
         jax_fn=functools.partial(
@@ -259,6 +260,40 @@ class _ImageAugmentationTest(parameterized.TestCase):
             order=order,
             mode=mode))
 
+  @parameterized.product(
+      parameters_base=[
+          ("in_range", "nearest", 0),
+          ("in_range", "nearest", 1),
+          ("in_range", "mirror", 1),
+          ("in_range", "constant", 1),
+          ("out_of_range", "nearest", 0),
+          ("out_of_range", "nearest", 1),
+          ("out_of_range", "mirror", 1),
+          ("out_of_range", "constant", 1),
+      ],
+      cval=(0.0, 1.0, -2.0),
+      angle=(0.0, np.pi / 4, -np.pi / 4),
+  )
+  def test_rotate(self, parameters_base, cval, angle):
+    images_list_type, mode, order = parameters_base
+    if images_list_type == "in_range":
+      images_list = _RAND_FLOATS_IN_RANGE
+    elif images_list_type == "out_of_range":
+      images_list = _RAND_FLOATS_OUT_OF_RANGE
+    else:
+      raise ValueError(f"{images_list_type} not a valid image list for tests.")
+    self._test_fn(
+        images_list,
+        jax_fn=functools.partial(
+            augment.rotate, angle=angle, mode=mode, order=order, cval=cval),
+        reference_fn=functools.partial(
+            scipy.ndimage.rotate,
+            angle=angle * 180 / np.pi,  # SciPy uses degrees.
+            order=order,
+            mode=mode,
+            cval=cval,
+            reshape=False))
+
   @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
                                   ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
   def test_solarize(self, images_list):
@@ -273,10 +308,7 @@ class _ImageAugmentationTest(parameterized.TestCase):
   def test_gaussian_blur(self, images_list):
     blur_fn = functools.partial(augment.gaussian_blur, kernel_size=_KERNEL_SIZE)
     self._test_fn_with_random_arg(
-        images_list,
-        jax_fn=blur_fn,
-        reference_fn=None,
-        sigma=(0.1, 2.0))
+        images_list, jax_fn=blur_fn, reference_fn=None, sigma=(0.1, 2.0))
 
   @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
                                   ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
@@ -288,8 +320,8 @@ class _ImageAugmentationTest(parameterized.TestCase):
 
 class TestMatchReference(_ImageAugmentationTest):
 
-  def _test_fn_with_random_arg(
-      self, images_list, jax_fn, reference_fn, **kw_range):
+  def _test_fn_with_random_arg(self, images_list, jax_fn, reference_fn,
+                               **kw_range):
     if reference_fn is None:
       return
     assert len(kw_range) == 1
@@ -315,8 +347,8 @@ class TestMatchReference(_ImageAugmentationTest):
 
 class TestVmap(_ImageAugmentationTest):
 
-  def _test_fn_with_random_arg(
-      self, images_list, jax_fn, reference_fn, **kw_range):
+  def _test_fn_with_random_arg(self, images_list, jax_fn, reference_fn,
+                               **kw_range):
     del reference_fn  # unused.
     assert len(kw_range) == 1
     kw_name, (random_min, random_max) = list(kw_range.items())[0]
@@ -347,8 +379,8 @@ class TestVmap(_ImageAugmentationTest):
 
 class TestJit(_ImageAugmentationTest):
 
-  def _test_fn_with_random_arg(
-      self, images_list, jax_fn, reference_fn, **kw_range):
+  def _test_fn_with_random_arg(self, images_list, jax_fn, reference_fn,
+                               **kw_range):
     del reference_fn  # unused.
     assert len(kw_range) == 1
     kw_name, (random_min, random_max) = list(kw_range.items())[0]

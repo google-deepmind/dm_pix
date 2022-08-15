@@ -338,14 +338,14 @@ def affine_transform(
       float, offset is the same for each axis. If an array, offset should
       contain one value for each axis.
     order: the order of the spline interpolation, default is 1. The order has
-      to be in the range 0-1. Note that PIX interpolation will only be used for
-      order=1, for other values we use `jax.scipy.ndimage.map_coordinates`.
+      to be in the range [0-1]. Note that PIX interpolation will only be used
+      for order=1, for other values we use `jax.scipy.ndimage.map_coordinates`.
     mode: the mode parameter determines how the input array is extended beyond
-      its boundaries. Default is "nearest", using PIX
-      `flat_nd_linear_interpolate` function, which is very fast on accelerators
-      (especially on TPUs). For all other modes, 'constant', 'wrap', 'mirror'
-      and 'reflect', we rely on `jax.scipy.ndimage.map_coordinates`, which
-      however is slow on accelerators, so use it with care.
+      its boundaries. Default is 'nearest'. Modes 'nearest and 'constant' use
+      PIX interpolation, which is very fast on accelerators (especially on
+      TPUs). For all other modes, 'wrap', 'mirror' and 'reflect', we rely
+      on `jax.scipy.ndimage.map_coordinates`, which however is slow on
+      accelerators, so use it with care.
     cval: value to fill past edges of input if mode is 'constant'. Default is
       0.0.
 
@@ -384,10 +384,50 @@ def affine_transform(
 
   if mode == "nearest" and order == 1:
     interpolate_function = interpolation.flat_nd_linear_interpolate
+  elif mode == "constant" and order == 1:
+    interpolate_function = functools.partial(
+        interpolation.flat_nd_linear_interpolate_constant, cval=cval)
   else:
     interpolate_function = functools.partial(
         jax.scipy.ndimage.map_coordinates, mode=mode, order=order, cval=cval)
   return interpolate_function(image, coordinates)
+
+
+def rotate(
+    image: chex.Array,
+    angle: float,
+    *,
+    order: int = 1,
+    mode: str = "nearest",
+    cval: float = 0.0,
+) -> chex.Array:
+  """Rotates an image around its center using interpolation.
+
+  Args:
+    image: a JAX array representing an image. Assumes that the image is
+      either HWC or CHW.
+    angle: the counter-clockwise rotation angle in units of radians.
+    order: the order of the spline interpolation, default is 1. The order has
+      to be in the range [0,1]. See `affine_transform` for details.
+    mode: the mode parameter determines how the input array is extended beyond
+      its boundaries. Default is 'nearest'. See `affine_transform` for details.
+    cval: value to fill past edges of input if mode is 'constant'. Default is
+      0.0.
+
+  Returns:
+    The rotated image.
+  """
+  # Calculate inverse transform matrix assuming clockwise rotation.
+  c = jnp.cos(angle)
+  s = jnp.sin(angle)
+  matrix = jnp.array([[c, s, 0], [-s, c, 0], [0, 0, 1]])
+
+  # Use the offset to place the rotation at the image center.
+  image_center = (jnp.asarray(image.shape) - 1.) / 2.
+  offset = image_center - matrix @ image_center
+
+  return affine_transform(image, matrix, offset=offset, order=order, mode=mode,
+                          cval=cval)
 
 
 def random_flip_left_right(
