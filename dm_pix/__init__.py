@@ -39,6 +39,7 @@ random_flip_left_right = augment.random_flip_left_right
 random_flip_up_down = augment.random_flip_up_down
 random_hue = augment.random_hue
 random_saturation = augment.random_saturation
+rotate = augment.rotate
 rot90 = augment.rot90
 solarize = augment.solarize
 
@@ -55,6 +56,8 @@ space_to_depth = depth_and_space.space_to_depth
 
 # Interpolation functions.
 flat_nd_linear_interpolate = interpolation.flat_nd_linear_interpolate
+flat_nd_linear_interpolate_constant = (
+    interpolation.flat_nd_linear_interpolate_constant)
 
 # Metrics.
 mae = metrics.mae
@@ -79,6 +82,7 @@ __all__ = (
     "depth_to_space",
     "extract_patches",
     "flat_nd_linear_interpolate",
+    "flat_nd_linear_interpolate_constant",
     "flip_left_right",
     "flip_up_down",
     "gaussian_blur",
@@ -94,6 +98,7 @@ __all__ = (
     "random_flip_up_down",
     "random_hue",
     "random_saturation",
+    "rotate",
     "rgb_to_hsl",
     "rgb_to_hsv",
     "rgb_to_grayscale",

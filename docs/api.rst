@@ -21,6 +21,7 @@ Augmentations
     random_flip_up_down
     random_hue
     random_saturation
+    rotate
     rot90
     solarize
 
@@ -104,6 +105,11 @@ random_saturation
 
 .. autofunction:: random_saturation
 
+rotate
+~~~~~~
+
+.. autofunction:: rotate
+
 rot90
 ~~~~~
 
@@ -180,11 +186,17 @@ Interpolation functions
 
 .. autosummary::
     flat_nd_linear_interpolate
+    flat_nd_linear_interpolate_constant
 
 flat_nd_linear_interpolate
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autofunction:: flat_nd_linear_interpolate
+
+flat_nd_linear_interpolate_constant
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autofunction:: flat_nd_linear_interpolate_constant
 
 
 Metrics
