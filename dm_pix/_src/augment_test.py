@@ -317,6 +317,38 @@ class _ImageAugmentationTest(parameterized.TestCase):
     crop_fn = lambda img: augment.random_crop(key, img, (100, 100, 3))
     self._test_fn(images_list, jax_fn=crop_fn, reference_fn=None)
 
+  @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
+                                  ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))
+  def test_elastic_deformation(self, images_list):
+    key = jax.random.PRNGKey(43)
+    alpha = 10.
+    sigma = 5.
+    elastic_deformation = functools.partial(
+        augment.elastic_deformation,
+        key,
+        alpha=alpha,
+        sigma=sigma,
+    )
+    # Due to the difference between random number generation in numpy (in
+    # reference function) and JAX's for the displacement fields we cannot test
+    # this against some of the available functions. At the time of writing open
+    # source options are either unmaintained or are not readily available.
+    self._test_fn(
+        images_list,
+        jax_fn=elastic_deformation,
+        reference_fn=None,
+    )
+    elastic_deformation = functools.partial(
+        augment.elastic_deformation,
+        key,
+        sigma=sigma)
+    # Sigma has to be constant for jit since kernel_size is derived from it.
+    self._test_fn_with_random_arg(
+        images_list,
+        jax_fn=elastic_deformation,
+        reference_fn=None,
+        alpha=(40, 80))
+
 
 class TestMatchReference(_ImageAugmentationTest):
 

@@ -11,6 +11,7 @@ Augmentations
     adjust_hue
     adjust_saturation
     affine_transform
+    elastic_transform
     flip_left_right
     flip_up_down
     gaussian_blur
@@ -54,6 +55,11 @@ affine_transform
 ~~~~~~~~~~~~~~~~~
 
 .. autofunction:: affine_transform
+
+elastic_deformation
+~~~~~~~~~~~~~~~~~
+
+.. autofunction:: elastic_deformation
 
 flip_left_right
 ~~~~~~~~~~~~~~~
