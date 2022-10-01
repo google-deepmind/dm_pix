@@ -567,6 +567,18 @@ def random_brightness(
   delta = jax.random.uniform(key, (), minval=-max_delta, maxval=max_delta)
   return adjust_brightness(image, delta)
 
+def random_gamma(
+    key: chex.PRNGKey,
+    image: chex.Array,
+    min_gamma: chex.Numeric,
+    max_gamma: chex.Numeric,
+    *,
+    gain: chex.Numeric = 1,
+    assume_in_bounds: bool = False,
+) -> chex.Array:
+    """`adjust_gamma(...)` with random gamma in [min_gamma, max_gamma)`."""
+    gamma = jax.random.uniform(key, (), minval=min_gamma, maxval=max_gamma)
+    return adjust_gamma(image, gamma, gain=gain, assume_in_bounds=assume_in_bounds)
 
 def random_hue(
     key: chex.PRNGKey,
