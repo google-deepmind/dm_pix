@@ -38,6 +38,7 @@ random_contrast = augment.random_contrast
 random_crop = augment.random_crop
 random_flip_left_right = augment.random_flip_left_right
 random_flip_up_down = augment.random_flip_up_down
+random_gamma = augment.random_gamma
 random_hue = augment.random_hue
 random_saturation = augment.random_saturation
 rotate = augment.rotate
@@ -98,6 +99,7 @@ __all__ = (
     "random_crop",
     "random_flip_left_right",
     "random_flip_up_down",
+    "random_gamma",
     "random_hue",
     "random_saturation",
     "rotate",

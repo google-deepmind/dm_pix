@@ -87,6 +87,12 @@ class _ImageAugmentationTest(parameterized.TestCase):
         jax_fn=augment.adjust_gamma,
         reference_fn=tf.image.adjust_gamma,
         gamma=(0.5, 1.5))
+    key = jax.random.PRNGKey(0)
+    self._test_fn_with_random_arg(
+        images_list,
+        jax_fn=functools.partial(augment.random_gamma, key, min_gamma=1),
+        reference_fn=None,
+        max_gamma=(1.5, 1.9))
 
   @parameterized.named_parameters(("in_range", _RAND_FLOATS_IN_RANGE),
                                   ("out_of_range", _RAND_FLOATS_OUT_OF_RANGE))

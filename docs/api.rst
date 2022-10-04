@@ -20,6 +20,7 @@ Augmentations
     random_crop
     random_flip_left_right
     random_flip_up_down
+    random_gamma
     random_hue
     random_saturation
     rotate
@@ -100,6 +101,11 @@ random_flip_up_down
 ~~~~~~~~~~~~~~~~~~~
 
 .. autofunction:: random_flip_up_down
+
+random_gamma
+~~~~~~~~~~~~~~~~~~~
+
+.. autofunction:: random_gamma
 
 random_hue
 ~~~~~~~~~~
