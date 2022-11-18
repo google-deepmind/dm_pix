@@ -438,6 +438,62 @@ def affine_transform(
 
   Returns:
     The input image transformed by the given matrix.
+
+  Example transformations:
+    - Rotation:
+    >>> angle = jnp.pi / 4
+    >>> matrix = jnp.array([
+    ...    [jnp.cos(rotation), -jnp.sin(rotation), 0],
+    ...    [jnp.sin(rotation), jnp.cos(rotation), 0],
+    ...    [0, 0, 1],
+    ... ])
+    >>> result = dm_pix.affine_transform(image=image, matrix=matrix)
+
+    - Tranlsation: Translation can be expressed through either the matrix itself
+      or the offset parameter.
+    >>> matrix = jnp.array([
+    ...   [1, 0, 0, 25],
+    ...   [0, 1, 0, 25],
+    ...   [0, 0, 1, 0],
+    ... ])
+    >>> result = dm_pix.affine_transform(image=image, matrix=matrix)
+    >>> # Or with offset:
+    >>> matrix = jnp.array([
+    ...   [1, 0, 0],
+    ...   [0, 1, 0],
+    ...   [0, 0, 1],
+    ... ])
+    >>> offset = jnp.array([25, 25, 0])
+    >>> result = dm_pix.affine_transform(
+            image=image, matrix=matrix, offset=offset)
+
+    - Reflection:
+    >>> matrix = jnp.array([
+    ...   [-1, 0, 0],
+    ...   [0, 1, 0],
+    ...   [0, 0, 1],
+    ... ])
+    >>> result = dm_pix.affine_transform(image=image, matrix=matrix)
+
+    - Scale:
+    >>> matrix = jnp.array([
+    ...   [2, 0, 0],
+    ...   [0, 1, 0],
+    ...   [0, 0, 1],
+    ... ])
+    >>> result = dm_pix.affine_transform(image=image, matrix=matrix)
+
+    - Shear:
+    >>> matrix = jnp.array([
+    ...   [1, 0.5, 0],
+    ...   [0.5, 1, 0],
+    ...   [0, 0, 1],
+    ... ])
+    >>> result = dm_pix.affine_transform(image=image, matrix=matrix)
+
+  One can also combine different transfromations matrices:
+
+  >>> matrix = rotation_matrix.dot(translation_matrix)
   """
   chex.assert_rank(image, 3)
   chex.assert_rank(matrix, {1, 2})
