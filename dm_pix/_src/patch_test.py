@@ -62,6 +62,93 @@ class PatchTest(chex.TestCase, parameterized.TestCase):
     np.testing.assert_array_equal(jax_patches, tf_patches.numpy())
 
   @chex.all_variants
+  @parameterized.named_parameters(
+      ('padding_valid', 'VALID'),
+      ('padding_same', 'SAME'),
+  )
+  def test_extract_patches_0d(self, padding):
+    image_shape = (2, 3)
+    images = _create_test_images(image_shape)
+
+    sizes = (1, 1)
+    strides = (1, 1)
+    rates = (1, 1)
+
+    extract_patches = self.variant(
+        functools.partial(patch.extract_patches, padding=padding),
+        static_argnums=(1, 2, 3))
+    jax_patches = extract_patches(
+        images,
+        sizes,
+        strides,
+        rates,
+    )
+    # 0D patches is a no-op.
+    np.testing.assert_array_equal(jax_patches, images)
+
+  @chex.all_variants
+  @parameterized.named_parameters(
+      ('padding_valid', 'VALID'),
+      ('padding_same', 'SAME'),
+  )
+  def test_extract_patches_1d(self, padding):
+    image_shape = (2, 7, 3)
+    images = _create_test_images(image_shape)
+
+    sizes = (1, 2, 1)
+    strides = (1, 1, 1)
+    rates = (1, 2, 1)
+
+    extract_patches = self.variant(
+        functools.partial(patch.extract_patches, padding=padding),
+        static_argnums=(1, 2, 3))
+    jax_patches = extract_patches(
+        images,
+        sizes,
+        strides,
+        rates,
+    )
+    jax_patches = np.expand_dims(jax_patches, -2)
+    # Reference patches are computed over an image with an extra singleton dim.
+    tf_patches = tf.image.extract_patches(
+        np.expand_dims(images, 2),
+        sizes=sizes + (1,),
+        strides=strides + (1,),
+        rates=rates + (1,),
+        padding=padding,
+    )
+    np.testing.assert_array_equal(jax_patches, tf_patches.numpy())
+
+  @chex.all_variants
+  def test_extract_patches_3d(self):
+    image_shape = (2, 4, 9, 6, 3)
+    images = _create_test_images(image_shape)
+
+    sizes = (1, 2, 3, 2, 1)
+    strides = (1, 2, 3, 2, 1)
+    rates = (1, 1, 1, 1, 1)
+
+    extract_patches = self.variant(
+        functools.partial(patch.extract_patches, padding='VALID'),
+        static_argnums=(1, 2, 3))
+    jax_patches = extract_patches(
+        images,
+        sizes,
+        strides,
+        rates,
+    )
+    # Reconstructing the original from non-overlapping patches.
+    images_reconstructed = np.reshape(
+        jax_patches,
+        jax_patches.shape[:-1] + sizes[1:-1] + images.shape[-1:]
+    )
+    images_reconstructed = np.moveaxis(images_reconstructed,
+                                       (-4, -3, -2),
+                                       (2, 4, 6))
+    images_reconstructed = images_reconstructed.reshape(image_shape)
+    np.testing.assert_allclose(images_reconstructed, images, rtol=5e-3)
+
+  @chex.all_variants
   @parameterized.product(
       ({
           'sizes': (1, 2, 3),
@@ -75,6 +162,26 @@ class PatchTest(chex.TestCase, parameterized.TestCase):
           'sizes': (1, 2, 3, 1),
           'strides': (1, 1, 2, 1),
           'rates': (1, 2, 1),
+      }, {
+          'sizes': (1, 2, 1),
+          'strides': (1, 2, 1),
+          'rates': (1, 1),
+      }, {
+          'sizes': (1, 1),
+          'strides': (1, 2),
+          'rates': (1, 1),
+      }, {
+          'sizes': (1, 1),
+          'strides': (1,),
+          'rates': (1, 1),
+      }, {
+          'sizes': (1, 2, 3, 4, 1),
+          'strides': (1, 2, 3, 4, 2),
+          'rates': (1, 1, 1, 1, 1),
+      }, {
+          'sizes': (1, 2, 3, 1),
+          'strides': (1, 2, 3, 4, 1),
+          'rates': (1, 1, 1, 1, 1),
       }),
       padding=('VALID', 'SAME'),
   )
