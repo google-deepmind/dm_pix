@@ -87,8 +87,8 @@ def rgb_planes_to_hsv_planes(
 
   Args:
     red: the red color plane.
-    green: the red color plane.
-    blue: the red color plane.
+    green: the green color plane.
+    blue: the blue color plane.
 
   Returns:
     A tuple of (hue, saturation, value) planes, as float values in range [0, 1].
@@ -97,8 +97,14 @@ def rgb_planes_to_hsv_planes(
   minimum = jnp.minimum(jnp.minimum(red, green), blue)
   range_ = value - minimum
 
-  saturation = jnp.where(value > 0, range_ / value, 0.)
-  norm = 1. / (6. * range_)
+  # Avoid divisions by zeros by using safe values for the division. Even if the
+  # results are masked by jnp.where and the function would give correct results,
+  # this would produce NaNs when computing gradients.
+  safe_value = jnp.where(value > 0, value, 1.)
+  safe_range = jnp.where(range_ > 0, range_, 1.)
+
+  saturation = jnp.where(value > 0, range_ / safe_value, 0.)
+  norm = 1. / (6. * safe_range)
 
   hue = jnp.where(value == green,
                   norm * (blue - red) + 2. / 6.,
