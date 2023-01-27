@@ -449,7 +449,7 @@ def affine_transform(
     ... ])
     >>> result = dm_pix.affine_transform(image=image, matrix=matrix)
 
-    - Tranlsation: Translation can be expressed through either the matrix itself
+    - Translation: Translation can be expressed through either the matrix itself
       or the offset parameter.
     >>> matrix = jnp.array([
     ...   [1, 0, 0, 25],
@@ -491,7 +491,7 @@ def affine_transform(
     ... ])
     >>> result = dm_pix.affine_transform(image=image, matrix=matrix)
 
-  One can also combine different transfromations matrices:
+  One can also combine different transformations matrices:
 
   >>> matrix = rotation_matrix.dot(translation_matrix)
   """
