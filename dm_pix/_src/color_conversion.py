@@ -277,3 +277,43 @@ def rgb_to_grayscale(
     return jnp.tile(grayscale, reps)  # Tile to 3 along the channel axis.
   else:
     return grayscale
+
+
+def rgb_to_bgr(
+  image_rgb: chex.Array,
+  *,
+  channel_axis: int = -1,
+):
+  """Converts an image from RGB to BGR.
+  
+  Args:
+    image_rgb: an RGB image, with float values in range [0, 1]. Behavior outside
+      of these bounds is not guaranteed.
+    channel_axis: the channel axis. image_rgb should have 3 layers along this
+      axis.
+      
+  Returns:
+    An BGR image, with float values in range [0, 1], stacked along channel_axis.
+  """
+  red, green, blue = split_channels(image_rgb, channel_axis)
+  return jnp.stack([blue, green, red], axis=channel_axis)
+
+
+def bgr_to_rgb(
+  image_bgr: chex.Array,
+  *,
+  channel_axis: int = -1,
+):
+  """Converts an image from BGR to RGB.
+  
+  Args:
+    image_bgr: an BGR image, with float values in range [0, 1]. Behavior outside
+      of these bounds is not guaranteed.
+    channel_axis: the channel axis. image_bgr should have 3 layers along this
+      axis.
+      
+  Returns:
+    An RGB image, with float values in range [0, 1], stacked along channel_axis.
+  """
+  blue, green, red = split_channels(image_bgr, channel_axis)
+  return jnp.stack([red, green, blue], axis=channel_axis)
