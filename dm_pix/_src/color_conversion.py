@@ -25,24 +25,20 @@ import jax.numpy as jnp
 def split_channels(
     image: chex.Array,
     channel_axis: int,
-    channel_count: int = 3,
 ) -> Tuple[chex.Array, chex.Array, chex.Array]:
   """Splits an image into its channels.
 
   Args:
     image: an image, with float values in range [0, 1]. Behavior outside of these
       bounds is not guaranteed.
-    channel_axis: the channel axis. image should have `channel_count` layers along
-      this axis.
-    channel_count: the number of channels in the image. Defaults to 3 (RGB), but can
-      be set to 4 (RGBA) or 1 (grayscale).
+    channel_axis: the channel axis. image should have 3 layers along this axis.
   
   Returns:
-    A tuple of channel_count images, with float values in range [0, 1], stacked
+    A tuple of 3 images, with float values in range [0, 1], stacked
     along channel_axis.
   """
-  chex.assert_axis_dimension(image, axis=channel_axis, expected=channel_count)
-  split_axes = jnp.split(image, channel_count, axis=channel_axis)
+  chex.assert_axis_dimension(image, axis=channel_axis, expected=3)
+  split_axes = jnp.split(image, 3, axis=channel_axis)
   return tuple(map(lambda x: jnp.squeeze(x, axis=channel_axis), split_axes))
 
 
@@ -277,43 +273,3 @@ def rgb_to_grayscale(
     return jnp.tile(grayscale, reps)  # Tile to 3 along the channel axis.
   else:
     return grayscale
-
-
-def rgb_to_bgr(
-  image_rgb: chex.Array,
-  *,
-  channel_axis: int = -1,
-):
-  """Converts an image from RGB to BGR.
-  
-  Args:
-    image_rgb: an RGB image, with float values in range [0, 1]. Behavior outside
-      of these bounds is not guaranteed.
-    channel_axis: the channel axis. image_rgb should have 3 layers along this
-      axis.
-      
-  Returns:
-    An BGR image, with float values in range [0, 1], stacked along channel_axis.
-  """
-  red, green, blue = split_channels(image_rgb, channel_axis)
-  return jnp.stack([blue, green, red], axis=channel_axis)
-
-
-def bgr_to_rgb(
-  image_bgr: chex.Array,
-  *,
-  channel_axis: int = -1,
-):
-  """Converts an image from BGR to RGB.
-  
-  Args:
-    image_bgr: an BGR image, with float values in range [0, 1]. Behavior outside
-      of these bounds is not guaranteed.
-    channel_axis: the channel axis. image_bgr should have 3 layers along this
-      axis.
-      
-  Returns:
-    An RGB image, with float values in range [0, 1], stacked along channel_axis.
-  """
-  blue, green, red = split_channels(image_bgr, channel_axis)
-  return jnp.stack([red, green, blue], axis=channel_axis)
