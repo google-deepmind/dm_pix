@@ -26,6 +26,17 @@ def split_channels(
     image: chex.Array,
     channel_axis: int,
 ) -> Tuple[chex.Array, chex.Array, chex.Array]:
+  """Splits an image into its channels.
+
+  Args:
+    image: an image, with float values in range [0, 1]. Behavior outside of
+      these bounds is not guaranteed.
+    channel_axis: the channel axis. image should have 3 layers along this axis.
+
+  Returns:
+    A tuple of 3 images, with float values in range [0, 1], stacked
+    along channel_axis.
+  """
   chex.assert_axis_dimension(image, axis=channel_axis, expected=3)
   split_axes = jnp.split(image, 3, axis=channel_axis)
   return tuple(map(lambda x: jnp.squeeze(x, axis=channel_axis), split_axes))
