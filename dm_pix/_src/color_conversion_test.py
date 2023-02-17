@@ -20,6 +20,7 @@ from typing import Sequence
 
 from absl.testing import parameterized
 import chex
+from dm_pix._src import augment
 from dm_pix._src import color_conversion
 import jax
 import jax.numpy as jnp
@@ -124,6 +125,18 @@ class ColorConversionTest(
       rgb = rgb.swapaxes(-1, -3)
     jacobian = jax.jacrev(rgb_to_hsv)(rgb)
     self.assertFalse(jnp.isnan(jacobian).any(), "NaNs in RGB to HSV gradients")
+
+  def test_rgb_to_hsv_subnormals(self):
+
+    # Create a tensor that will contain some subnormal floating points.
+    img = jnp.zeros((5, 5, 3))
+    img = img.at[2, 2, 1].set(1)
+    blurred_img = augment.gaussian_blur(img, sigma=0.08, kernel_size=5.)
+    fun = lambda x: color_conversion.rgb_to_hsv(x).sum()
+    grad_fun = jax.grad(fun)
+
+    grad = grad_fun(blurred_img)
+    self.assertFalse(jnp.isnan(grad).any(), "NaNs in RGB to HSV gradients")
 
   @chex.all_variants
   def test_vmap_roundtrip(self):

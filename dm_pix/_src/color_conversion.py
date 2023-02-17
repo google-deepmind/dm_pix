@@ -58,6 +58,8 @@ def rgb_to_hsv(
   Returns:
     An HSV image, with float values in range [0, 1], stacked along channel_axis.
   """
+  eps = jnp.finfo(image_rgb.dtype).eps
+  image_rgb = jnp.where(jnp.abs(image_rgb) < eps, 0., image_rgb)
   red, green, blue = split_channels(image_rgb, channel_axis)
   return jnp.stack(
       rgb_planes_to_hsv_planes(red, green, blue), axis=channel_axis)
