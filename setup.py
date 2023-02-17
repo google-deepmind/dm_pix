@@ -62,7 +62,7 @@ setup(
     extras_require=_EXTRA_PACKAGES,
     tests_require=_parse_requirements(
         os.path.join(_CURRENT_DIR, 'requirements_tests.txt')),
-    requires_python='>=3.7',
+    requires_python='>=3.8',
     include_package_data=True,
     zip_safe=False,
     # PyPI package information.
