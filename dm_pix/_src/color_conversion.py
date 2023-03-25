@@ -175,7 +175,7 @@ def rgb_to_hsl(
       axis.
 
   Returns:
-    An HSV image, with float values in range [0, 1], stacked along channel_axis.
+    An HSL image, with float values in range [0, 1], stacked along channel_axis.
   """
   red, green, blue = split_channels(image_rgb, channel_axis)
 
