@@ -346,6 +346,51 @@ def pad_to_size(
   return jnp.pad(image, pad_width=pad_width, mode=mode, **pad_kwargs or {})
 
 
+def resize_with_crop_or_pad(
+    image: chex.Array,
+    target_height: chex.Numeric,
+    target_width: chex.Numeric,
+    *,
+    pad_mode: str = "constant",
+    pad_kwargs: Optional[Any] = None,
+    channel_axis: int = -1,
+) -> chex.Array:
+  """Crops and/or pads an image to a target width and height.
+
+  Equivalent in functionality to tf.image.resize_with_crop_or_pad but allows for
+  different padding methods as well beyond zero padding.
+
+  Args:
+    image: a JAX array representing an image. Assumes that the image is either
+      ...HWC or ...CHW.
+    target_height: target height to crop or pad the image to.
+    target_width: target width to crop or pad the image to.
+    pad_mode: mode for padding the images, see jax.numpy.pad for details.
+      Default is `constant`.
+    pad_kwargs: keyword arguments to pass jax.numpy.pad, see documentation for
+      options.
+    channel_axis: the index of the channel axis.
+
+  Returns:
+    The image(s) resized by crop or pad to the desired target size.
+  """
+  chex.assert_rank(image, {3, 4})
+  image = center_crop(
+      image,
+      height=target_height,
+      width=target_width,
+      channel_axis=channel_axis,
+  )
+  return pad_to_size(
+      image,
+      target_height=target_height,
+      target_width=target_width,
+      channel_axis=channel_axis,
+      mode=pad_mode,
+      pad_kwargs=pad_kwargs,
+  )
+
+
 def flip_left_right(
     image: chex.Array,
     *,

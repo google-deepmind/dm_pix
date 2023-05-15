@@ -25,6 +25,7 @@ Augmentations
     random_gamma
     random_hue
     random_saturation
+    resize_with_crop_or_pad
     rotate
     rot90
     solarize
@@ -130,6 +131,11 @@ random_saturation
 ~~~~~~~~~~~~~~~~~
 
 .. autofunction:: random_saturation
+
+resize_with_crop_or_pad
+~~~~~~~~~~~~~~~~~
+
+.. autofunction:: resize_with_crop_or_pad
 
 rotate
 ~~~~~~

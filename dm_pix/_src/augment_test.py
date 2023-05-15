@@ -399,6 +399,31 @@ class _ImageAugmentationTest(parameterized.TestCase):
 
     self._test_fn(images_list, jax_fn=pad_fn, reference_fn=reference_fn)
 
+  @parameterized.product(
+      images_list=(_RAND_FLOATS_IN_RANGE, _RAND_FLOATS_OUT_OF_RANGE),
+      target_height=(156, 138, 200, 251),
+      target_width=(156, 138, 200, 251),
+  )
+  def test_resize_with_crop_or_pad(
+      self, images_list, target_height, target_width
+  ):
+    resize_crop_or_pad = functools.partial(
+        augment.resize_with_crop_or_pad,
+        target_height=target_height,
+        target_width=target_width,
+        pad_mode="constant",
+        pad_kwargs={"constant_values": 0},
+    )
+    reference_fn = functools.partial(
+        tf.image.resize_with_crop_or_pad,
+        target_height=target_height,
+        target_width=target_width,
+    )
+
+    self._test_fn(
+        images_list, jax_fn=resize_crop_or_pad, reference_fn=reference_fn
+    )
+
 
 class TestMatchReference(_ImageAugmentationTest):
 
