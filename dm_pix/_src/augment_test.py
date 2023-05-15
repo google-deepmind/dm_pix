@@ -376,6 +376,29 @@ class _ImageAugmentationTest(parameterized.TestCase):
     )
     self._test_fn(images_list, jax_fn=center_crop, reference_fn=reference)
 
+  @parameterized.product(
+      images_list=(_RAND_FLOATS_IN_RANGE, _RAND_FLOATS_OUT_OF_RANGE),
+      target_height=(156, 131, 200, 251),
+      target_width=(156, 111, 200, 251),
+  )
+  def test_pad_to_size(self, images_list, target_height, target_width):
+    pad_fn = functools.partial(
+        augment.pad_to_size,
+        target_height=target_height,
+        target_width=target_width,
+        mode="constant",
+        pad_kwargs={"constant_values": 0},
+    )
+    # We have to rely on `resize_with_crop_or_pad` as there are no pad to size
+    # equivalents.
+    reference_fn = functools.partial(
+        tf.image.resize_with_crop_or_pad,
+        target_height=target_height,
+        target_width=target_width,
+    )
+
+    self._test_fn(images_list, jax_fn=pad_fn, reference_fn=reference_fn)
+
 
 class TestMatchReference(_ImageAugmentationTest):
 
@@ -482,6 +505,30 @@ class TestCustom(parameterized.TestCase):
         image=jnp.array(images_list),
         height=height,
         width=width,
+    )
+
+    self.assertEqual(output.shape[1], expected_height)
+    self.assertEqual(output.shape[2], expected_width)
+
+  @parameterized.product(
+      images_list=(_RAND_FLOATS_IN_RANGE, _RAND_FLOATS_OUT_OF_RANGE),
+      target_height=(55, 84),
+      target_width=(55, 84),
+      expected_height=(131, 131),
+      expected_width=(111, 111),
+  )
+  def test_pad_to_size_when_target_size_smaller_than_original(
+      self,
+      images_list,
+      target_height,
+      target_width,
+      expected_height,
+      expected_width,
+  ):
+    output = augment.pad_to_size(
+        image=jnp.array(images_list),
+        target_height=target_height,
+        target_width=target_width,
     )
 
     self.assertEqual(output.shape[1], expected_height)

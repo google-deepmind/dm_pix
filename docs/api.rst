@@ -16,6 +16,7 @@ Augmentations
     flip_left_right
     flip_up_down
     gaussian_blur
+    pad_to_size
     random_brightness
     random_contrast
     random_crop
@@ -83,6 +84,12 @@ gaussian_blur
 ~~~~~~~~~~~~~
 
 .. autofunction:: gaussian_blur
+
+pad_to_size
+~~~~~~~~~~~~~
+
+.. autofunction:: pad_to_size
+
 
 random_brightness
 ~~~~~~~~~~~~~~~~~

@@ -20,7 +20,7 @@ that of TensorFlow.
 """
 
 import functools
-from typing import Callable, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Optional, Sequence, Tuple, Union
 
 import chex
 from dm_pix._src import color_conversion
@@ -289,6 +289,61 @@ def center_crop(
   return jax.lax.slice(
       image, start_indices=start_indices, limit_indices=limit_indices
   )
+
+
+def pad_to_size(
+    image: chex.Array,
+    target_height: int,
+    target_width: int,
+    *,
+    mode: str = "constant",
+    pad_kwargs: Optional[Any] = None,
+    channel_axis: int = -1,
+) -> chex.Array:
+  """Pads an image to the given size keeping the original image centered.
+
+  For different padding methods and kwargs please see:
+  https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.pad.html
+
+  In case of odd size difference along any dimension the bottom/right side gets
+  the extra padding pixel.
+
+  Target size can be smaller than original size which results in a no-op for
+  such dimension.
+
+  Args:
+    image: a JAX array representing an image. Assumes that the image is either
+      ...HWC or ...CHW.
+    target_height: target height to pad the image to.
+    target_width: target width to pad the image to.
+    mode: Mode for padding the images, see jax.numpy.pad for details. Default is
+      `constant`.
+    pad_kwargs: Keyword arguments to pass jax.numpy.pad, see documentation for
+      options.
+    channel_axis: the index of the channel axis.
+
+  Returns:
+    The padded image(s).
+  """
+  chex.assert_rank(image, {3, 4})
+  batch, height, width, _ = _get_dimension_values(
+      image=image, channel_axis=channel_axis
+  )
+  delta_width = max(target_width - width, 0)
+  delta_height = max(target_height - height, 0)
+  if delta_width == 0 and delta_height == 0:
+    return image
+
+  left = delta_width // 2
+  right = max(target_width - (left + width), 0)
+  top = delta_height // 2
+  bottom = max(target_height - (top + height), 0)
+
+  pad_width = ((top, bottom), (left, right), (0, 0))
+  if batch:
+    pad_width = ((0, 0), *pad_width)
+
+  return jnp.pad(image, pad_width=pad_width, mode=mode, **pad_kwargs or {})
 
 
 def flip_left_right(
