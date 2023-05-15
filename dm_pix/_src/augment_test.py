@@ -355,11 +355,33 @@ class _ImageAugmentationTest(parameterized.TestCase):
         reference_fn=None,
         alpha=(40, 80))
 
+  @parameterized.product(
+      images_list=(_RAND_FLOATS_IN_RANGE, _RAND_FLOATS_OUT_OF_RANGE),
+      height=(131, 111, 1, 88),
+      width=(111, 105, 1, 40),
+  )
+  def test_center_crop(self, images_list, height, width):
+    center_crop = functools.partial(
+        augment.center_crop,
+        height=height,
+        width=width,
+    )
+    # Using layer as reference as other tf utility functions are not exactly
+    # this same center crop:
+    # - tf.image.crop_and_resize
+    # - tf.image.central_crop
+    reference = tf.keras.layers.CenterCrop(
+        height=height,
+        width=width,
+    )
+    self._test_fn(images_list, jax_fn=center_crop, reference_fn=reference)
+
 
 class TestMatchReference(_ImageAugmentationTest):
 
-  def _test_fn_with_random_arg(self, images_list, jax_fn, reference_fn,
-                               **kw_range):
+  def _test_fn_with_random_arg(
+      self, images_list, jax_fn, reference_fn, **kw_range
+  ):
     if reference_fn is None:
       return
     assert len(kw_range) == 1
@@ -436,6 +458,34 @@ class TestJit(_ImageAugmentationTest):
       adjusted_jax = jax_fn(image_rgb)
       adjusted_jit = jax_fn_jitted(image_rgb)
       self.assertAllCloseTolerant(adjusted_jax, adjusted_jit)
+
+
+class TestCustom(parameterized.TestCase):
+  """Tests custom logic that is not covered by reference functions."""
+
+  @parameterized.product(
+      images_list=(_RAND_FLOATS_IN_RANGE, _RAND_FLOATS_OUT_OF_RANGE),
+      height=(250, 200),
+      width=(250, 200),
+      expected_height=(131, 131),
+      expected_width=(111, 111),
+  )
+  def test_center_crop_size_bigger_than_original(
+      self,
+      images_list,
+      height,
+      width,
+      expected_height,
+      expected_width,
+  ):
+    output = augment.center_crop(
+        image=jnp.array(images_list),
+        height=height,
+        width=width,
+    )
+
+    self.assertEqual(output.shape[1], expected_height)
+    self.assertEqual(output.shape[2], expected_width)
 
 
 if __name__ == "__main__":

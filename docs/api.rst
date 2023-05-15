@@ -11,6 +11,7 @@ Augmentations
     adjust_hue
     adjust_saturation
     affine_transform
+    center_crop
     elastic_transform
     flip_left_right
     flip_up_down
@@ -56,6 +57,12 @@ affine_transform
 ~~~~~~~~~~~~~~~~~
 
 .. autofunction:: affine_transform
+
+center_crop
+~~~~~~~~~~~~~~~~~
+
+.. autofunction:: center_crop
+
 
 elastic_deformation
 ~~~~~~~~~~~~~~~~~

@@ -20,7 +20,7 @@ that of TensorFlow.
 """
 
 import functools
-from typing import Callable, Sequence, Tuple, Union
+from typing import Callable, Optional, Sequence, Tuple, Union
 
 import chex
 from dm_pix._src import color_conversion
@@ -237,6 +237,58 @@ def elastic_deformation(
     transformed_image = jnp.moveaxis(
         transformed_image, source=-1, destination=channel_axis)
   return transformed_image
+
+
+def center_crop(
+    image: chex.Array,
+    height: chex.Numeric,
+    width: chex.Numeric,
+    *,
+    channel_axis: int = -1,
+) -> chex.Array:
+  """Crops an image to the given size keeping the same center of the original.
+
+  Target height/width given can be greater than the current size of the image
+  which results in being a no-op for that dimension.
+
+  In case of odd size along any dimension the bottom/right side gets the extra
+  pixel.
+
+  Args:
+    image: a JAX array representing an image. Assumes that the image is either
+      ...HWC or ...CHW.
+    height: target height to crop the image to.
+    width: target width to crop the image to.
+    channel_axis: the index of the channel axis.
+
+  Returns:
+    The cropped image(s).
+  """
+  chex.assert_rank(image, {3, 4})
+  batch, current_height, current_width, channel = _get_dimension_values(
+      image=image, channel_axis=channel_axis
+  )
+  center_h, center_w = current_height // 2, current_width // 2
+
+  left = max(center_w - (width // 2), 0)
+  right = min(left + width, current_width)
+  top = max(center_h - (height // 2), 0)
+  bottom = min(top + height, current_height)
+
+  if _channels_last(image, channel_axis):
+    start_indices = (top, left, 0)
+    limit_indices = (bottom, right, channel)
+  else:
+    start_indices = (0, top, left)
+    limit_indices = (channel, bottom, right)
+
+  if batch is not None:  # In case batch of images is given.
+    start_indices = (0, *start_indices)
+    limit_indices = (batch, *limit_indices)
+
+  return jax.lax.slice(
+      image, start_indices=start_indices, limit_indices=limit_indices
+  )
 
 
 def flip_left_right(
@@ -795,3 +847,36 @@ def _get_interpolate_function(
     interpolate_function = functools.partial(
         jax.scipy.ndimage.map_coordinates, mode=mode, order=order, cval=cval)
   return interpolate_function
+
+
+def _get_dimension_values(
+    image: chex.Array,
+    channel_axis: int,
+) -> Tuple[Optional[int], int, int, int]:
+  """Gets shape values in BHWC order.
+
+  If single image is given B is None.
+
+  Small utility to get dimension values regardless of channel axis and single
+  image or batch of images are passed.
+
+  Args:
+    image: a JAX array representing an image. Assumes that the image is either
+      ...HWC or ...CHW.
+    channel_axis: channel_axis: the index of the channel axis.
+
+  Returns:
+    A tuple with the values of each dimension in order BHWC.
+  """
+  chex.assert_rank(image, {3, 4})
+  if image.ndim == 4:
+    if _channels_last(image=image, channel_axis=channel_axis):
+      batch, height, width, channel = image.shape
+    else:
+      batch, channel, height, width = image.shape
+  else:
+    if _channels_last(image=image, channel_axis=channel_axis):
+      batch, (height, width, channel) = None, image.shape
+    else:
+      batch, (channel, height, width) = None, image.shape
+  return batch, height, width, channel
