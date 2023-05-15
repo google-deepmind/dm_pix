@@ -91,7 +91,6 @@ pad_to_size
 
 .. autofunction:: pad_to_size
 
-
 random_brightness
 ~~~~~~~~~~~~~~~~~
 
