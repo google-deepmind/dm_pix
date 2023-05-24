@@ -29,10 +29,12 @@ adjust_gamma = augment.adjust_gamma
 adjust_hue = augment.adjust_hue
 adjust_saturation = augment.adjust_saturation
 affine_transform = augment.affine_transform
+center_crop = augment.center_crop
 elastic_deformation = augment.elastic_deformation
 flip_left_right = augment.flip_left_right
 flip_up_down = augment.flip_up_down
 gaussian_blur = augment.gaussian_blur
+pad_to_size = augment.pad_to_size
 random_brightness = augment.random_brightness
 random_contrast = augment.random_contrast
 random_crop = augment.random_crop
@@ -41,6 +43,7 @@ random_flip_up_down = augment.random_flip_up_down
 random_gamma = augment.random_gamma
 random_hue = augment.random_hue
 random_saturation = augment.random_saturation
+resize_with_crop_or_pad = augment.resize_with_crop_or_pad
 rotate = augment.rotate
 rot90 = augment.rot90
 solarize = augment.solarize
@@ -81,6 +84,7 @@ __all__ = (
     "adjust_hue",
     "adjust_saturation",
     "affine_transform",
+    "center_crop",
     "depth_to_space",
     "elastic_deformation",
     "extract_patches",
@@ -93,6 +97,7 @@ __all__ = (
     "hsv_to_rgb",
     "mae",
     "mse",
+    "pad_to_size",
     "psnr",
     "random_brightness",
     "random_contrast",
@@ -102,6 +107,7 @@ __all__ = (
     "random_gamma",
     "random_hue",
     "random_saturation",
+    "resize_with_crop_or_pad",
     "rotate",
     "rgb_to_hsl",
     "rgb_to_hsv",
