@@ -17,6 +17,8 @@ All functions expect float-encoded images, with values in [0, 1], with NHWC
 shapes. Each image metric function returns a scalar for each image pair.
 """
 
+from typing import Callable, Optional
+
 import chex
 import jax
 import jax.numpy as jnp
@@ -133,6 +135,7 @@ def ssim(
     k2: float = 0.03,
     return_map: bool = False,
     precision=jax.lax.Precision.HIGHEST,
+    filter_fn: Optional[Callable[[chex.Array], chex.Array]] = None,
 ) -> chex.Numeric:
   """Computes the structural similarity index (SSIM) between image pairs.
 
@@ -158,6 +161,9 @@ def ssim(
     k2: One of the SSIM dampening parameters (> 0.).
     return_map: If True, will cause the per-pixel SSIM "map" to be returned.
     precision: The numerical precision to use when performing convolution.
+    filter_fn: An optional argument for overriding the filter function used by
+      SSIM, which would otherwise be a 2D Gaussian blur specified by filter_size
+      and filter_sigma.
 
   Returns:
     Each image's mean SSIM, or a tensor of individual values if `return_map`.
@@ -166,53 +172,69 @@ def ssim(
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])
 
-  # Construct a 1D Gaussian blur filter.
-  hw = filter_size // 2
-  shift = (2 * hw - filter_size + 1) / 2
-  f_i = ((jnp.arange(filter_size) - hw + shift) / filter_sigma)**2
-  filt = jnp.exp(-0.5 * f_i)
-  filt /= jnp.sum(filt)
+  if filter_fn is None:
+    # Construct a 1D Gaussian blur filter.
+    hw = filter_size // 2
+    shift = (2 * hw - filter_size + 1) / 2
+    f_i = ((jnp.arange(filter_size) - hw + shift) / filter_sigma) ** 2
+    filt = jnp.exp(-0.5 * f_i)
+    filt /= jnp.sum(filt)
 
-  # Construct a 1D convolution.
-  filt_fn_1 = lambda z: jnp.convolve(z, filt, mode="valid", precision=precision)
-  filt_fn_vmap = jax.vmap(filt_fn_1)
+    # Construct a 1D convolution.
+    def filter_fn_1(z):
+      return jnp.convolve(z, filt, mode="valid", precision=precision)
 
-  # Apply the vectorized filter along the y axis.
-  def filt_fn_y(z):
-    z_flat = jnp.moveaxis(z, -3, -1).reshape((-1, z.shape[-3]))
-    z_filt_shape = ((z.shape[-4],) if z.ndim == 4 else
-                    ()) + (z.shape[-2], z.shape[-1], -1)
-    return jnp.moveaxis(filt_fn_vmap(z_flat).reshape(z_filt_shape), -1, -3)
+    filter_fn_vmap = jax.vmap(filter_fn_1)
 
-  # Apply the vectorized filter along the x axis.
-  def filt_fn_x(z):
-    z_flat = jnp.moveaxis(z, -2, -1).reshape((-1, z.shape[-2]))
-    z_filt_shape = ((z.shape[-4],) if z.ndim == 4 else
-                    ()) + (z.shape[-3], z.shape[-1], -1)
-    return jnp.moveaxis(filt_fn_vmap(z_flat).reshape(z_filt_shape), -1, -2)
+    # Apply the vectorized filter along the y axis.
+    def filter_fn_y(z):
+      z_flat = jnp.moveaxis(z, -3, -1).reshape((-1, z.shape[-3]))
+      z_filtered_shape = ((z.shape[-4],) if z.ndim == 4 else ()) + (
+          z.shape[-2],
+          z.shape[-1],
+          -1,
+      )
+      z_filtered = jnp.moveaxis(
+          filter_fn_vmap(z_flat).reshape(z_filtered_shape), -1, -3
+      )
+      return z_filtered
 
-  # Apply the blur in both x and y.
-  filt_fn = lambda z: filt_fn_y(filt_fn_x(z))
+    # Apply the vectorized filter along the x axis.
+    def filter_fn_x(z):
+      z_flat = jnp.moveaxis(z, -2, -1).reshape((-1, z.shape[-2]))
+      z_filtered_shape = ((z.shape[-4],) if z.ndim == 4 else ()) + (
+          z.shape[-3],
+          z.shape[-1],
+          -1,
+      )
+      z_filtered = jnp.moveaxis(
+          filter_fn_vmap(z_flat).reshape(z_filtered_shape), -1, -2
+      )
+      return z_filtered
 
-  mu0 = filt_fn(a)
-  mu1 = filt_fn(b)
+    # Apply the blur in both x and y.
+    filter_fn = lambda z: filter_fn_y(filter_fn_x(z))
+
+  mu0 = filter_fn(a)
+  mu1 = filter_fn(b)
   mu00 = mu0 * mu0
   mu11 = mu1 * mu1
   mu01 = mu0 * mu1
-  sigma00 = filt_fn(a**2) - mu00
-  sigma11 = filt_fn(b**2) - mu11
-  sigma01 = filt_fn(a * b) - mu01
+  sigma00 = filter_fn(a**2) - mu00
+  sigma11 = filter_fn(b**2) - mu11
+  sigma01 = filter_fn(a * b) - mu01
 
   # Clip the variances and covariances to valid values.
   # Variance must be non-negative:
-  epsilon = jnp.finfo(jnp.float32).eps**2
+  epsilon = jnp.finfo(jnp.float32).eps ** 2
   sigma00 = jnp.maximum(epsilon, sigma00)
   sigma11 = jnp.maximum(epsilon, sigma11)
   sigma01 = jnp.sign(sigma01) * jnp.minimum(
-      jnp.sqrt(sigma00 * sigma11), jnp.abs(sigma01))
+      jnp.sqrt(sigma00 * sigma11), jnp.abs(sigma01)
+  )
 
-  c1 = (k1 * max_val)**2
-  c2 = (k2 * max_val)**2
+  c1 = (k1 * max_val) ** 2
+  c2 = (k2 * max_val) ** 2
   numer = (2 * mu01 + c1) * (2 * sigma01 + c2)
   denom = (mu00 + mu11 + c1) * (sigma00 + sigma11 + c2)
   ssim_map = numer / denom
