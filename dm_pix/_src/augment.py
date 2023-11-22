@@ -564,6 +564,7 @@ def affine_transform(
     matrix: the inverse coordinate transformation matrix, mapping output
       coordinates to input coordinates. If ndim is the number of dimensions of
       input, the given matrix must have one of the following shapes:
+
       - (ndim, ndim): the linear transformation matrix for each output
         coordinate.
       - (ndim,): assume that the 2-D transformation matrix is diagonal, with the
@@ -573,6 +574,7 @@ def affine_transform(
         ignored.
       - (ndim, ndim + 1): as above, but the bottom row of a homogeneous
         transformation matrix is always [0, 0, 0, 1], and may be omitted.
+
     offset: the offset into the array where the transform is applied. If a
       float, offset is the same for each axis. If an array, offset should
       contain one value for each axis.
@@ -592,7 +594,8 @@ def affine_transform(
     The input image transformed by the given matrix.
 
   Example transformations:
-    - Rotation:
+    Rotation:
+
     >>> angle = jnp.pi / 4
     >>> matrix = jnp.array([
     ...    [jnp.cos(rotation), -jnp.sin(rotation), 0],
@@ -601,8 +604,9 @@ def affine_transform(
     ... ])
     >>> result = dm_pix.affine_transform(image=image, matrix=matrix)
 
-    - Translation: Translation can be expressed through either the matrix itself
-      or the offset parameter.
+    Translation can be expressed through either the matrix itself
+    or the offset parameter:
+
     >>> matrix = jnp.array([
     ...   [1, 0, 0, 25],
     ...   [0, 1, 0, 25],
@@ -619,7 +623,8 @@ def affine_transform(
     >>> result = dm_pix.affine_transform(
             image=image, matrix=matrix, offset=offset)
 
-    - Reflection:
+    Reflection:
+
     >>> matrix = jnp.array([
     ...   [-1, 0, 0],
     ...   [0, 1, 0],
@@ -627,7 +632,8 @@ def affine_transform(
     ... ])
     >>> result = dm_pix.affine_transform(image=image, matrix=matrix)
 
-    - Scale:
+    Scale:
+
     >>> matrix = jnp.array([
     ...   [2, 0, 0],
     ...   [0, 1, 0],
@@ -635,7 +641,8 @@ def affine_transform(
     ... ])
     >>> result = dm_pix.affine_transform(image=image, matrix=matrix)
 
-    - Shear:
+    Shear:
+
     >>> matrix = jnp.array([
     ...   [1, 0.5, 0],
     ...   [0.5, 1, 0],
@@ -643,9 +650,9 @@ def affine_transform(
     ... ])
     >>> result = dm_pix.affine_transform(image=image, matrix=matrix)
 
-  One can also combine different transformations matrices:
+    One can also combine different transformations matrices:
 
-  >>> matrix = rotation_matrix.dot(translation_matrix)
+    >>> matrix = rotation_matrix.dot(translation_matrix)
   """
   chex.assert_rank(image, 3)
   chex.assert_rank(matrix, {1, 2})

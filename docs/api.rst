@@ -12,7 +12,7 @@ Augmentations
     adjust_saturation
     affine_transform
     center_crop
-    elastic_transform
+    elastic_deformation
     flip_left_right
     flip_up_down
     gaussian_blur
@@ -61,13 +61,13 @@ affine_transform
 .. autofunction:: affine_transform
 
 center_crop
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~
 
 .. autofunction:: center_crop
 
 
 elastic_deformation
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 .. autofunction:: elastic_deformation
 
@@ -87,7 +87,7 @@ gaussian_blur
 .. autofunction:: gaussian_blur
 
 pad_to_size
-~~~~~~~~~~~~~
+~~~~~~~~~~~
 
 .. autofunction:: pad_to_size
 
@@ -117,7 +117,7 @@ random_flip_up_down
 .. autofunction:: random_flip_up_down
 
 random_gamma
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
 
 .. autofunction:: random_gamma
 
@@ -132,7 +132,7 @@ random_saturation
 .. autofunction:: random_saturation
 
 resize_with_crop_or_pad
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autofunction:: resize_with_crop_or_pad
 

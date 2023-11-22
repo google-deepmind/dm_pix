@@ -69,7 +69,7 @@ sys.path.insert(0, os.path.abspath('../'))
 sys.path.append(os.path.abspath('ext'))
 
 import dm_pix as pix
-import sphinxcontrib.katex as katex
+from sphinxcontrib import katex
 
 # -- Project information -----------------------------------------------------
 
@@ -95,7 +95,7 @@ extensions = [
     'sphinxcontrib.bibtex',
     'sphinxcontrib.katex',
     'sphinx_autodoc_typehints',
-    'sphinx_rtd_theme',
+    'sphinx_book_theme',
     'coverage_check',
     'myst_nb',  # This is used for the .ipynb notebooks
 ]
@@ -127,7 +127,6 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = []
-# html_favicon = '_static/favicon.ico'
 
 # -- Options for bibtex ------------------------------------------------------
 
