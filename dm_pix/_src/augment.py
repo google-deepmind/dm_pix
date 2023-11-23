@@ -170,7 +170,7 @@ def elastic_deformation(
 
   Small sigma values (< 1.) give pixelated images while higher values result
   in water like results. Alpha should be in the between x5 and x10 the value
-  given for sigma for sensible resutls.
+  given for sigma for sensible results.
 
   Args:
     key: key: a JAX RNG key.
@@ -927,7 +927,7 @@ def _get_interpolate_function(
   """Selects the interpolation function to use based on the given parameters.
 
   PIX interpolations are preferred given they are faster on accelerators. For
-  the cases where such interpolation is not implemented by PIX we relly on
+  the cases where such interpolation is not implemented by PIX we really on
   jax.scipy.ndimage.map_coordinates. See specifics below.
 
   Args:
