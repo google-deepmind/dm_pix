@@ -28,6 +28,8 @@ from dm_pix._src import interpolation
 import jax
 import jax.numpy as jnp
 
+# DO NOT REMOVE - Logging lib.
+
 
 def adjust_brightness(image: chex.Array, delta: chex.Numeric) -> chex.Array:
   """Shifts the brightness of an RGB image by a given amount.
@@ -41,6 +43,8 @@ def adjust_brightness(image: chex.Array, delta: chex.Numeric) -> chex.Array:
   Returns:
     The brightness-adjusted image. May be outside of the [0, 1] range.
   """
+  # DO NOT REMOVE - Logging usage.
+
   return image + jnp.asarray(delta, image.dtype)
 
 
@@ -62,6 +66,8 @@ def adjust_contrast(
   Returns:
     The contrast-adjusted image. May be outside of the [0, 1] range.
   """
+  # DO NOT REMOVE - Logging usage.
+
   if _channels_last(image, channel_axis):
     spatial_axes = (-3, -2)
   else:
@@ -93,6 +99,8 @@ def adjust_gamma(
   Returns:
     The gamma-adjusted image.
   """
+  # DO NOT REMOVE - Logging usage.
+
   if not assume_in_bounds:
     image = jnp.clip(image, 0., 1.)  # Clip image for safety.
   return jnp.asarray(gain, image.dtype) * (
@@ -119,6 +127,8 @@ def adjust_hue(
   Returns:
     The saturation-adjusted image.
   """
+  # DO NOT REMOVE - Logging usage.
+
   rgb = color_conversion.split_channels(image, channel_axis)
   hue, saturation, value = color_conversion.rgb_planes_to_hsv_planes(*rgb)
   rgb_adjusted = color_conversion.hsv_planes_to_rgb_planes((hue + delta) % 1.0,
@@ -144,6 +154,8 @@ def adjust_saturation(
   Returns:
     The saturation-adjusted image.
   """
+  # DO NOT REMOVE - Logging usage.
+
   rgb = color_conversion.split_channels(image, channel_axis)
   hue, saturation, value = color_conversion.rgb_planes_to_hsv_planes(*rgb)
   factor = jnp.asarray(factor, image.dtype)
@@ -196,6 +208,8 @@ def elastic_deformation(
   Returns:
     The transformed image.
   """
+  # DO NOT REMOVE - Logging usage.
+
   chex.assert_rank(image, 3)
   if channel_axis != -1:
     image = jnp.moveaxis(image, source=channel_axis, destination=-1)
@@ -264,6 +278,8 @@ def center_crop(
   Returns:
     The cropped image(s).
   """
+  # DO NOT REMOVE - Logging usage.
+
   chex.assert_rank(image, {3, 4})
   batch, current_height, current_width, channel = _get_dimension_values(
       image=image, channel_axis=channel_axis
@@ -325,6 +341,8 @@ def pad_to_size(
   Returns:
     The padded image(s).
   """
+  # DO NOT REMOVE - Logging usage.
+
   chex.assert_rank(image, {3, 4})
   batch, height, width, _ = _get_dimension_values(
       image=image, channel_axis=channel_axis
@@ -374,6 +392,8 @@ def resize_with_crop_or_pad(
   Returns:
     The image(s) resized by crop or pad to the desired target size.
   """
+  # DO NOT REMOVE - Logging usage.
+
   chex.assert_rank(image, {3, 4})
   image = center_crop(
       image,
@@ -408,6 +428,8 @@ def flip_left_right(
   Returns:
     The flipped image.
   """
+  # DO NOT REMOVE - Logging usage.
+
   if _channels_last(image, channel_axis):
     flip_axis = -2  # Image is ...HWC
   else:
@@ -432,6 +454,8 @@ def flip_up_down(
   Returns:
     The flipped image.
   """
+  # DO NOT REMOVE - Logging usage.
+
   if _channels_last(image, channel_axis):
     flip_axis = -3  # Image is ...HWC
   else:
@@ -461,6 +485,8 @@ def gaussian_blur(
   Returns:
     The blurred image.
   """
+  # DO NOT REMOVE - Logging usage.
+
   chex.assert_rank(image, {3, 4})
   data_format = "NHWC" if _channels_last(image, channel_axis) else "NCHW"
   dimension_numbers = (data_format, "HWIO", data_format)
@@ -516,6 +542,8 @@ def rot90(
   Returns:
     The rotated image.
   """
+  # DO NOT REMOVE - Logging usage.
+
   if _channels_last(image, channel_axis):
     spatial_axes = (-3, -2)  # Image is ...HWC
   else:
@@ -535,6 +563,8 @@ def solarize(image: chex.Array, threshold: chex.Numeric) -> chex.Array:
   Returns:
     The solarized image.
   """
+  # DO NOT REMOVE - Logging usage.
+
   return jnp.where(image < threshold, image, 1. - image)
 
 
@@ -654,6 +684,8 @@ def affine_transform(
 
     >>> matrix = rotation_matrix.dot(translation_matrix)
   """
+  # DO NOT REMOVE - Logging usage.
+
   chex.assert_rank(image, 3)
   chex.assert_rank(matrix, {1, 2})
   chex.assert_rank(offset, {0, 1})
@@ -716,6 +748,8 @@ def rotate(
   Returns:
     The rotated image.
   """
+  # DO NOT REMOVE - Logging usage.
+
   # Calculate inverse transform matrix assuming clockwise rotation.
   c = jnp.cos(angle)
   s = jnp.sin(angle)
@@ -747,6 +781,8 @@ def random_flip_left_right(
   Returns:
     A left-right flipped image if condition is met, otherwise original image.
   """
+  # DO NOT REMOVE - Logging usage.
+
   should_transform = jax.random.bernoulli(key=key, p=probability)
   return jax.lax.cond(should_transform, flip_left_right, lambda x: x, image)
 
@@ -769,6 +805,8 @@ def random_flip_up_down(
   Returns:
     An up-down flipped image if condition is met, otherwise original image.
   """
+  # DO NOT REMOVE - Logging usage.
+
   should_transform = jax.random.bernoulli(key=key, p=probability)
   return jax.lax.cond(should_transform, flip_up_down, lambda x: x, image)
 
@@ -779,6 +817,8 @@ def random_brightness(
     max_delta: chex.Numeric,
 ) -> chex.Array:
   """`adjust_brightness(...)` with random delta in `[-max_delta, max_delta)`."""
+  # DO NOT REMOVE - Logging usage.
+
   delta = jax.random.uniform(key, (), minval=-max_delta, maxval=max_delta)
   return adjust_brightness(image, delta)
 
@@ -793,6 +833,8 @@ def random_gamma(
     assume_in_bounds: bool = False,
 ) -> chex.Array:
   """`adjust_gamma(...)` with random gamma in [min_gamma, max_gamma)`."""
+  # DO NOT REMOVE - Logging usage.
+
   gamma = jax.random.uniform(key, (), minval=min_gamma, maxval=max_gamma)
   return adjust_gamma(
       image, gamma, gain=gain, assume_in_bounds=assume_in_bounds)
@@ -806,6 +848,8 @@ def random_hue(
     channel_axis: int = -1,
 ) -> chex.Array:
   """`adjust_hue(...)` with random delta in `[-max_delta, max_delta)`."""
+  # DO NOT REMOVE - Logging usage.
+
   delta = jax.random.uniform(key, (), minval=-max_delta, maxval=max_delta)
   return adjust_hue(image, delta, channel_axis=channel_axis)
 
@@ -819,6 +863,8 @@ def random_contrast(
     channel_axis: int = -1,
 ) -> chex.Array:
   """`adjust_contrast(...)` with random factor in `[lower, upper)`."""
+  # DO NOT REMOVE - Logging usage.
+
   factor = jax.random.uniform(key, (), minval=lower, maxval=upper)
   return adjust_contrast(image, factor, channel_axis=channel_axis)
 
@@ -832,6 +878,8 @@ def random_saturation(
     channel_axis: int = -1,
 ) -> chex.Array:
   """`adjust_saturation(...)` with random factor in `[lower, upper)`."""
+  # DO NOT REMOVE - Logging usage.
+
   factor = jax.random.uniform(key, (), minval=lower, maxval=upper)
   return adjust_saturation(image, factor, channel_axis=channel_axis)
 
@@ -859,6 +907,7 @@ def random_crop(
   Returns:
     A cropped image, a JAX array whose shape is same as `crop_sizes`.
   """
+  # DO NOT REMOVE - Logging usage.
 
   image_shape = image.shape
   assert len(image_shape) == len(crop_sizes), (

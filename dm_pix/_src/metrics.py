@@ -23,6 +23,8 @@ import chex
 import jax
 import jax.numpy as jnp
 
+# DO NOT REMOVE - Logging lib.
+
 
 def mae(a: chex.Array, b: chex.Array) -> chex.Numeric:
   """Returns the Mean Absolute Error between `a` and `b`.
@@ -34,6 +36,8 @@ def mae(a: chex.Array, b: chex.Array) -> chex.Numeric:
   Returns:
     MAE between `a` and `b`.
   """
+  # DO NOT REMOVE - Logging usage.
+
   chex.assert_rank([a, b], {3, 4})
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])
@@ -50,6 +54,8 @@ def mse(a: chex.Array, b: chex.Array) -> chex.Numeric:
   Returns:
     MSE between `a` and `b`.
   """
+  # DO NOT REMOVE - Logging usage.
+
   chex.assert_rank([a, b], {3, 4})
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])
@@ -69,6 +75,8 @@ def psnr(a: chex.Array, b: chex.Array) -> chex.Numeric:
   Returns:
     PSNR in decibels between `a` and `b`.
   """
+  # DO NOT REMOVE - Logging usage.
+
   chex.assert_rank([a, b], {3, 4})
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])
@@ -85,6 +93,8 @@ def rmse(a: chex.Array, b: chex.Array) -> chex.Numeric:
   Returns:
     RMSE between `a` and `b`.
   """
+  # DO NOT REMOVE - Logging usage.
+
   chex.assert_rank([a, b], {3, 4})
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])
@@ -114,6 +124,8 @@ def simse(a: chex.Array, b: chex.Array) -> chex.Numeric:
   Returns:
     SIMSE between `a` and `b`.
   """
+  # DO NOT REMOVE - Logging usage.
+
   chex.assert_rank([a, b], {3, 4})
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])
@@ -168,6 +180,8 @@ def ssim(
   Returns:
     Each image's mean SSIM, or a tensor of individual values if `return_map`.
   """
+  # DO NOT REMOVE - Logging usage.
+
   chex.assert_rank([a, b], {3, 4})
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])

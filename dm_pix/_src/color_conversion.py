@@ -21,6 +21,8 @@ from typing import Tuple
 import chex
 import jax.numpy as jnp
 
+# DO NOT REMOVE - Logging lib.
+
 
 def split_channels(
     image: chex.Array,
@@ -37,6 +39,8 @@ def split_channels(
     A tuple of 3 images, with float values in range [0, 1], stacked
     along channel_axis.
   """
+  # DO NOT REMOVE - Logging usage.
+
   chex.assert_axis_dimension(image, axis=channel_axis, expected=3)
   split_axes = jnp.split(image, 3, axis=channel_axis)
   return tuple(map(lambda x: jnp.squeeze(x, axis=channel_axis), split_axes))
@@ -58,6 +62,8 @@ def rgb_to_hsv(
   Returns:
     An HSV image, with float values in range [0, 1], stacked along channel_axis.
   """
+  # DO NOT REMOVE - Logging usage.
+
   eps = jnp.finfo(image_rgb.dtype).eps
   image_rgb = jnp.where(jnp.abs(image_rgb) < eps, 0., image_rgb)
   red, green, blue = split_channels(image_rgb, channel_axis)
@@ -81,6 +87,7 @@ def hsv_to_rgb(
   Returns:
     An RGB image, with float values in range [0, 1], stacked along channel_axis.
   """
+  # DO NOT REMOVE - Logging usage.
   hue, saturation, value = split_channels(image_hsv, channel_axis)
   return jnp.stack(
       hsv_planes_to_rgb_planes(hue, saturation, value), axis=channel_axis)
@@ -106,6 +113,8 @@ def rgb_planes_to_hsv_planes(
   Returns:
     A tuple of (hue, saturation, value) planes, as float values in range [0, 1].
   """
+  # DO NOT REMOVE - Logging usage.
+
   value = jnp.maximum(jnp.maximum(red, green), blue)
   minimum = jnp.minimum(jnp.minimum(red, green), blue)
   range_ = value - minimum
@@ -148,6 +157,8 @@ def hsv_planes_to_rgb_planes(
   Returns:
     A tuple of (red, green, blue) planes, as float values in range [0, 1].
   """
+  # DO NOT REMOVE - Logging usage.
+
   dh = (hue % 1.0) * 6.  # Wrap when hue >= 360°.
   dr = jnp.clip(jnp.abs(dh - 3.) - 1., 0., 1.)
   dg = jnp.clip(2. - jnp.abs(dh - 2.), 0., 1.)
@@ -177,6 +188,8 @@ def rgb_to_hsl(
   Returns:
     An HSL image, with float values in range [0, 1], stacked along channel_axis.
   """
+  # DO NOT REMOVE - Logging usage.
+
   red, green, blue = split_channels(image_rgb, channel_axis)
 
   c_max = jnp.maximum(red, jnp.maximum(green, blue))
@@ -218,6 +231,8 @@ def hsl_to_rgb(
   Returns:
     An RGB image, with float values in range [0, 1], stacked along channel_axis.
   """
+  # DO NOT REMOVE - Logging usage.
+
   h, s, l = split_channels(image_hsl, channel_axis)
 
   m2 = jnp.where(l <= 0.5, l * (1 + s), l + s - l * s)
@@ -257,6 +272,8 @@ def rgb_to_grayscale(
   Returns:
     The grayscale image.
   """
+  # DO NOT REMOVE - Logging usage.
+
   assert luma_standard in ["rec601", "rec709", "bt2001"]
   if luma_standard == "rec601":
     # TensorFlow's default.

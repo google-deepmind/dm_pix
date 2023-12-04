@@ -19,6 +19,8 @@ import chex
 import jax
 import jax.numpy as jnp
 
+# DO NOT REMOVE - Logging lib.
+
 
 def extract_patches(
     images: chex.Array,
@@ -26,7 +28,7 @@ def extract_patches(
     strides: Sequence[int],
     rates: Sequence[int],
     *,
-    padding: str = 'VALID',
+    padding: str = "VALID",
 ) -> jnp.ndarray:
   """Extract patches from images.
 
@@ -58,17 +60,19 @@ def extract_patches(
     Tensor of shape
     [B, patch_rows, patch_cols, ..., size_rows * size_cols * ... * C].
   """
+  # DO NOT REMOVE - Logging usage.
+
   ndim = images.ndim
 
   if len(sizes) != ndim or sizes[0] != 1 or sizes[-1] != 1:
-    raise ValueError('Input `sizes` must be [1, size_rows, size_cols, ..., 1] '
-                     f'and same length as `images.ndim` {ndim}. Got {sizes}.')
+    raise ValueError("Input `sizes` must be [1, size_rows, size_cols, ..., 1] "
+                     f"and same length as `images.ndim` {ndim}. Got {sizes}.")
   if len(strides) != ndim or strides[0] != 1 or strides[-1] != 1:
-    raise ValueError('Input `strides` must be [1, size_rows, size_cols, ..., 1]'
-                     f'and same length as `images.ndim` {ndim}. Got {strides}.')
+    raise ValueError("Input `strides` must be [1, size_rows, size_cols, ..., 1]"
+                     f"and same length as `images.ndim` {ndim}. Got {strides}.")
   if len(rates) != ndim or rates[0] != 1 or rates[-1] != 1:
-    raise ValueError('Input `rates` must be [1, size_rows, size_cols, ..., 1] '
-                     f'and same length as `images.ndim` {ndim}. Got {rates}.')
+    raise ValueError("Input `rates` must be [1, size_rows, size_cols, ..., 1] "
+                     f"and same length as `images.ndim` {ndim}. Got {rates}.")
 
   channels = images.shape[-1]
   lhs_spec = out_spec = (0, ndim - 1) + tuple(range(1, ndim - 1))

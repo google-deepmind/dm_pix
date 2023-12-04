@@ -17,6 +17,8 @@ import chex
 import jax
 import jax.numpy as jnp
 
+# DO NOT REMOVE - Logging lib.
+
 
 def depth_to_space(inputs: chex.Array, block_size: int) -> chex.Array:
   """Rearranges data from depth into blocks of spatial data.
@@ -31,6 +33,8 @@ def depth_to_space(inputs: chex.Array, block_size: int) -> chex.Array:
     [H * B, W * B, C / (B ** 2)], where B is `block_size`. If there's a leading
     batch dimension, it stays unchanged.
   """
+  # DO NOT REMOVE - Logging usage.
+
   chex.assert_rank(inputs, {3, 4})
   if inputs.ndim == 4:  # Batched case.
     return jax.vmap(depth_to_space, in_axes=(0, None))(inputs, block_size)
@@ -38,7 +42,8 @@ def depth_to_space(inputs: chex.Array, block_size: int) -> chex.Array:
   height, width, depth = inputs.shape
   if depth % (block_size**2) != 0:
     raise ValueError(
-        f'Number of channels {depth} must be divisible by block_size ** 2 {block_size**2}.'
+        f"Number of channels {depth} must be divisible by block_size ** 2"
+        f" {block_size**2}."
     )
   new_depth = depth // (block_size**2)
   outputs = jnp.reshape(inputs,
@@ -64,6 +69,8 @@ def space_to_depth(inputs: chex.Array, block_size: int) -> chex.Array:
     [H / B, W / B, C * (B ** 2)], where B is `block_size`. If there's a leading
     batch dimension, it stays unchanged.
   """
+  # DO NOT REMOVE - Logging usage.
+
   chex.assert_rank(inputs, {3, 4})
   if inputs.ndim == 4:  # Batched case.
     return jax.vmap(space_to_depth, in_axes=(0, None))(inputs, block_size)
@@ -71,10 +78,10 @@ def space_to_depth(inputs: chex.Array, block_size: int) -> chex.Array:
   height, width, depth = inputs.shape
   if height % block_size != 0:
     raise ValueError(
-        f'Height {height} must be divisible by block size {block_size}.')
+        f"Height {height} must be divisible by block size {block_size}.")
   if width % block_size != 0:
     raise ValueError(
-        f'Width {width} must be divisible by block size {block_size}.')
+        f"Width {width} must be divisible by block size {block_size}.")
   new_depth = depth * (block_size**2)
   new_height = height // block_size
   new_width = width // block_size

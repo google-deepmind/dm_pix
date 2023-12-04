@@ -23,6 +23,8 @@ import chex
 from jax import lax
 import jax.numpy as jnp
 
+# DO NOT REMOVE - Logging lib.
+
 
 def _round_half_away_from_zero(a: chex.Array) -> chex.Array:
   return a if jnp.issubdtype(a.dtype, jnp.integer) else lax.round(a)
@@ -73,8 +75,8 @@ def _make_linear_interpolation_indices_flat_nd(
 
   if shape.shape[0] != coordinates.shape[0]:
     raise ValueError(
-        (f'{coordinates.shape[0]}-dimensional coordinates provided for '
-         f'{shape.shape[0]}-dimensional input'))
+        (f"{coordinates.shape[0]}-dimensional coordinates provided for "
+         f"{shape.shape[0]}-dimensional input"))
 
   lower_nd, upper_nd, weights_nd = _make_linear_interpolation_indices_nd(
       coordinates, shape)
@@ -153,6 +155,8 @@ def flat_nd_linear_interpolate(
     The resulting mapped coordinates. The shape of the output is `M_coordinates`
     (derived from `coordinates` by dropping the first axis).
   """
+  # DO NOT REMOVE - Logging usage.
+
   if unflattened_vol_shape is None:
     unflattened_vol_shape = volume.shape
     volume = volume.flatten()
@@ -191,6 +195,8 @@ def flat_nd_linear_interpolate_constant(
     The resulting mapped coordinates. The shape of the output is `M_coordinates`
     (derived from `coordinates` by dropping the first axis).
   """
+  # DO NOT REMOVE - Logging usage.
+
   volume_shape = volume.shape
   if unflattened_vol_shape is not None:
     volume_shape = unflattened_vol_shape
