@@ -95,7 +95,7 @@ extensions = [
     'sphinxcontrib.bibtex',
     'sphinxcontrib.katex',
     'sphinx_autodoc_typehints',
-    'sphinx_book_theme',
+    'sphinx_rtd_theme',
     'coverage_check',
     'myst_nb',  # This is used for the .ipynb notebooks
 ]
