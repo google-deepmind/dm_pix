@@ -231,8 +231,9 @@ def elastic_deformation(
       sigma=sigma,
       kernel_size=kernel_size) * alpha
 
-  meshgrid = jnp.meshgrid(*[jnp.arange(size) for size in single_channel_shape],
-                          indexing="ij")
+  meshgrid = list(
+      jnp.meshgrid(
+          *[jnp.arange(size) for size in single_channel_shape], indexing="ij"))
   meshgrid[0] += shift_map_i
   meshgrid[1] += shift_map_j
 
