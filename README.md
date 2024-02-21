@@ -1,4 +1,4 @@
-<img align="left" width="200" height="120" src="https://raw.githubusercontent.com/google-deepmind/dm_pix/main/images/pix_logo.png" alt="pix_logo"></img>
+<img align="left" width="200" height="200" src="https://raw.githubusercontent.com/google-deepmind/dm_pix/master/dm_pix/images/pix_logo.png" alt="pix_logo"></img>
 
 # PIX
 
