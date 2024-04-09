@@ -26,20 +26,20 @@ python --version
 
 # Install JAX.
 python -m pip install --upgrade pip setuptools
-python -m pip install -r requirements.txt
-python -c 'import jax; print(jax.__version__)'
 
 # Run setup.py, this installs the python dependencies
 python -m pip install .
 
+python -c 'import jax; print(jax.__version__)'
+
 # Python test dependencies.
-python -m pip install -r requirements_tests.txt
+python -m pip install -e ".[test]"
 
 # CPU count on macos or linux
 if [ "$(uname)" == "Darwin" ]; then
-  N_JOBS=$(sysctl -n hw.logicalcpu)
+	N_JOBS=$(sysctl -n hw.logicalcpu)
 else
-  N_JOBS=$(grep -c ^processor /proc/cpuinfo)
+	N_JOBS=$(grep -c ^processor /proc/cpuinfo)
 fi
 
 # Run tests using pytest.
