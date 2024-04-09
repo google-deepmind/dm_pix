@@ -16,11 +16,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install setuptools wheel twine
+        pip install setuptools wheel twine build
     - name: Check consistency between the package version and release tag
       run: |
+        pip install .
         RELEASE_VER=${GITHUB_REF#refs/*/}
-        PACKAGE_VER="v`python setup.py --version`"
+        PACKAGE_VER="v`python -c 'import dm_pix; print(dm_pix.__version__)'`"
         if [ $RELEASE_VER != $PACKAGE_VER ]
         then
           echo "package ver. ($PACKAGE_VER) != release ver. ($RELEASE_VER)"; exit 1
@@ -30,5 +31,5 @@ jobs:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
-        python setup.py sdist bdist_wheel
+        python -m build
         twine upload dist/*
