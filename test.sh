@@ -24,12 +24,11 @@ python -m venv "${VENV_DIR}"
 source "${VENV_DIR}/bin/activate"
 python --version
 
-# Install JAX.
+# Update pip + setuptools and install dependencies specified in pyproject.toml
 python -m pip install --upgrade pip setuptools
-
-# Run setup.py, this installs the python dependencies
 python -m pip install .
 
+# print jax version
 python -c 'import jax; print(jax.__version__)'
 
 # Python test dependencies.
@@ -37,9 +36,9 @@ python -m pip install -e ".[test]"
 
 # CPU count on macos or linux
 if [ "$(uname)" == "Darwin" ]; then
-	N_JOBS=$(sysctl -n hw.logicalcpu)
+  N_JOBS=$(sysctl -n hw.logicalcpu)
 else
-	N_JOBS=$(grep -c ^processor /proc/cpuinfo)
+  N_JOBS=$(grep -c ^processor /proc/cpuinfo)
 fi
 
 # Run tests using pytest.
