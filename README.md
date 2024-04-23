@@ -147,4 +147,4 @@ Please read our [contributing guidelines](./CONTRIBUTING.md) and send us PRs!
 [`examples/`]: ./examples/
 [JAX logo]: ./examples/assets/jax_logo.jpg
 [JAX logo left-right]: ./examples/assets/flip_left_right_jax_logo.jpg
-[`requirements.txt`]: ./requirements.txt
+[`pyproject.toml`]: ./pyproject.toml
