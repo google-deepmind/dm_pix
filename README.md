@@ -23,7 +23,7 @@ through [`jax.jit`][jit], [`jax.vmap`][vmap] and [`jax.pmap`][pmap].
 PIX is written in pure Python, but depends on C++ code via JAX.
 
 Because JAX installation is different depending on your CUDA version, PIX does
-not list JAX as a dependency in [`requirements.txt`], although it is technically
+not list JAX as a dependency in [`pyproject.toml`], although it is technically
 listed for reference, but commented.
 
 First, follow [JAX installation instructions] to install JAX with the relevant
@@ -110,7 +110,7 @@ If you already have PIX installed, you just need to install some extra
 dependencies and run `pytest` as follows:
 
 ```bash
-$ pip install -r requirements_tests.txt
+$ pip install -e ".[test]"
 $ python -m pytest [-n <NUMCPUS>] dm_pix
 ```
 
@@ -147,4 +147,4 @@ Please read our [contributing guidelines](./CONTRIBUTING.md) and send us PRs!
 [`examples/`]: ./examples/
 [JAX logo]: ./examples/assets/jax_logo.jpg
 [JAX logo left-right]: ./examples/assets/flip_left_right_jax_logo.jpg
-[`requirements.txt`]: ./requirements.txt
+[`pyproject.toml`]: ./pyproject.toml

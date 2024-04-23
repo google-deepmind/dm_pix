@@ -1,0 +1,67 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "dm_pix"
+dynamic = ["version"]
+description = 'PIX is an image processing library in JAX, for JAX.'
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.8"
+authors = [
+    {name = "Google DeepMind", email = "pix-dev@google.com"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "chex>=0.0.6",
+    # jax>=0.2.17
+    # jaxlib>=0.1.69
+]
+
+[project.optional-dependencies]
+extras = [
+    "jax>=0.2.17",
+    "jaxlib>=0.1.69",
+]
+
+test = [
+    "scipy",
+    "tensorflow",
+    "pytest-xdist",
+]
+
+docs = [
+    "sphinx==4.5.0",
+    "sphinx_rtd_theme==1.0.0",
+    "sphinxcontrib-katex==0.9.0",
+    "sphinxcontrib-bibtex==2.4.2",
+    "sphinx-autodoc-typehints==1.11.1",
+    "IPython==8.10.0",
+    "ipykernel==5.3.4",
+    "pandoc==1.1.0",
+    "myst_nb==0.13.1",
+    "docutils==0.16",
+    "matplotlib==3.5.0",
+]
+
+examples = [
+    "Pillow==10.3.0",
+]
+
+[tool.setuptools.packages.find]
+include=["dm_pix/py.typed"]
+exclude = ["*_test.py", "examples"]
