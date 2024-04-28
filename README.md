@@ -1,6 +1,6 @@
-<img align="left" width="200" height="200" src="https://raw.githubusercontent.com/google-deepmind/dm_pix/master/dm_pix/images/pix_logo.png" alt="pix_logo"></img>
-
 # PIX
+
+![PIX logo](https://raw.githubusercontent.com/google-deepmind/dm_pix/master/dm_pix/images/pix_logo.png){style="width:200px; height:200px"}
 
 PIX is an image processing library in [JAX], for [JAX].
 

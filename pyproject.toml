@@ -37,29 +37,26 @@ extras = [
     "jax>=0.2.17",
     "jaxlib>=0.1.69",
 ]
-
 test = [
     "scipy",
     "tensorflow",
     "pytest-xdist",
 ]
-
 docs = [
-    "sphinx==4.5.0",
-    "sphinx_rtd_theme==1.0.0",
-    "sphinxcontrib-katex==0.9.0",
-    "sphinxcontrib-bibtex==2.4.2",
-    "sphinx-autodoc-typehints==1.11.1",
-    "IPython==8.10.0",
-    "ipykernel==5.3.4",
-    "pandoc==1.1.0",
-    "myst_nb==0.13.1",
-    "docutils==0.16",
-    "matplotlib==3.5.0",
+    "sphinx>=6.0.0",
+    "sphinx_rtd_theme",
+    "sphinxcontrib-katex",
+    "sphinxcontrib-bibtex",
+    "sphinx-autodoc-typehints",
+    "IPython",
+    "ipykernel",
+    "pandoc",
+    "myst_nb",
+    "docutils",
+    "matplotlib",
 ]
-
 examples = [
-    "Pillow==10.3.0",
+    "Pillow",
 ]
 
 [tool.setuptools.packages.find]
