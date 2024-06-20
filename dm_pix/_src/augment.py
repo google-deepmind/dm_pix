@@ -466,7 +466,7 @@ def flip_up_down(
 
 def gaussian_blur(
     image: chex.Array,
-    sigma: float,
+    sigma: chex.Numeric,
     kernel_size: float,
     *,
     padding: str = "SAME",
