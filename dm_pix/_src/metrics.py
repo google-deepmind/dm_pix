@@ -26,7 +26,7 @@ import jax.numpy as jnp
 # DO NOT REMOVE - Logging lib.
 
 
-def mae(a: chex.Array, b: chex.Array) -> chex.Numeric:
+def mae(a: chex.Array, b: chex.Array, ignore_nans: bool = False) -> chex.Numeric:
   """Returns the Mean Absolute Error between `a` and `b`.
 
   Args:
@@ -41,10 +41,12 @@ def mae(a: chex.Array, b: chex.Array) -> chex.Numeric:
   chex.assert_rank([a, b], {3, 4})
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])
-  return jnp.abs(a - b).mean(axis=(-3, -2, -1))
+  if ignore_nans:
+    return jnp.nanmean(jnp.abs(a - b), axis=(-3, -2, -1))
+  return jnp.mean(jnp.abs(a - b), axis=(-3, -2, -1))
 
 
-def mse(a: chex.Array, b: chex.Array) -> chex.Numeric:
+def mse(a: chex.Array, b: chex.Array, ignore_nans: bool = False) -> chex.Numeric:
   """Returns the Mean Squared Error between `a` and `b`.
 
   Args:
@@ -59,7 +61,9 @@ def mse(a: chex.Array, b: chex.Array) -> chex.Numeric:
   chex.assert_rank([a, b], {3, 4})
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])
-  return jnp.square(a - b).mean(axis=(-3, -2, -1))
+  if ignore_nans:
+    return jnp.nanmean(jnp.square(a - b), axis=(-3, -2, -1))
+  return jnp.mean(jnp.square(a - b), axis=(-3, -2, -1))
 
 
 def psnr(a: chex.Array, b: chex.Array) -> chex.Numeric:
@@ -148,6 +152,7 @@ def ssim(
     return_map: bool = False,
     precision=jax.lax.Precision.HIGHEST,
     filter_fn: Optional[Callable[[chex.Array], chex.Array]] = None,
+    ignore_nans: bool = False
 ) -> chex.Numeric:
   """Computes the structural similarity index (SSIM) between image pairs.
 
@@ -185,6 +190,11 @@ def ssim(
   chex.assert_rank([a, b], {3, 4})
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])
+
+  mask = ~(jnp.isnan(a) | jnp.isnan(b))
+
+  a = jnp.where(mask, a, 0.0)
+  b = jnp.where(mask, b, 0.0) 
 
   if filter_fn is None:
     # Construct a 1D Gaussian blur filter.
@@ -252,5 +262,13 @@ def ssim(
   numer = (2 * mu01 + c1) * (2 * sigma01 + c2)
   denom = (mu00 + mu11 + c1) * (sigma00 + sigma11 + c2)
   ssim_map = numer / denom
-  ssim_value = jnp.mean(ssim_map, list(range(-3, 0)))
+
+  # patch in the border trim from Scipy
+  trim_width = (filter_size - 1) // 2
+  ssim_map = ssim_map[:, trim_width:-trim_width, trim_width:-trim_width]
+  
+  if ignore_nans:
+    ssim_value = jnp.nanmean(ssim_map, axis=tuple(range(-3, 0)))
+  else:
+    ssim_value = jnp.mean(ssim_map, axis=tuple(range(-3, 0)))
   return ssim_map if return_map else ssim_value
