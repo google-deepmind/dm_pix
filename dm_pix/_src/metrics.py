@@ -26,7 +26,7 @@ import jax.numpy as jnp
 # DO NOT REMOVE - Logging lib.
 
 
-def mae(a: chex.Array, b: chex.Array, ignore_nans: bool = False) -> chex.Numeric:
+def mae(a: chex.Array, b: chex.Array, *, ignore_nans: bool = False) -> chex.Numeric:
   """Returns the Mean Absolute Error between `a` and `b`.
 
   Args:
@@ -47,7 +47,7 @@ def mae(a: chex.Array, b: chex.Array, ignore_nans: bool = False) -> chex.Numeric
   return jnp.mean(jnp.abs(a - b), axis=(-3, -2, -1))
 
 
-def mse(a: chex.Array, b: chex.Array, ignore_nans: bool = False) -> chex.Numeric:
+def mse(a: chex.Array, b: chex.Array, *, ignore_nans: bool = False) -> chex.Numeric:
   """Returns the Mean Squared Error between `a` and `b`.
 
   Args:
@@ -68,7 +68,7 @@ def mse(a: chex.Array, b: chex.Array, ignore_nans: bool = False) -> chex.Numeric
   return jnp.mean(jnp.square(a - b), axis=(-3, -2, -1))
 
 
-def psnr(a: chex.Array, b: chex.Array, ignore_nans: bool = False) -> chex.Array:
+def psnr(a: chex.Array, b: chex.Array, *, ignore_nans: bool = False) -> chex.Array:
   """Returns the Peak Signal-to-Noise Ratio between `a` and `b`.
 
   Assumes that the dynamic range of the images (the difference between the
@@ -90,7 +90,7 @@ def psnr(a: chex.Array, b: chex.Array, ignore_nans: bool = False) -> chex.Array:
   return -10.0 * jnp.log(mse(a, b, ignore_nans=ignore_nans)) / jnp.log(10.0)
 
 
-def rmse(a: chex.Array, b: chex.Array, ignore_nans: bool = False) -> chex.Array:
+def rmse(a: chex.Array, b: chex.Array, *, ignore_nans: bool = False) -> chex.Array:
   """Returns the Root Mean Squared Error between `a` and `b`.
 
   Args:
@@ -109,7 +109,7 @@ def rmse(a: chex.Array, b: chex.Array, ignore_nans: bool = False) -> chex.Array:
   return jnp.sqrt(mse(a, b, ignore_nans=ignore_nans))
 
 
-def simse(a: chex.Array, b: chex.Array, ignore_nans: bool = False) -> chex.Array:
+def simse(a: chex.Array, b: chex.Array, *, ignore_nans: bool = False) -> chex.Array:
   """Returns the Scale-Invariant Mean Squared Error between `a` and `b`.
 
   For each image pair, a scaling factor for `b` is computed as the solution to
