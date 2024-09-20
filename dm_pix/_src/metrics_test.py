@@ -44,7 +44,7 @@ class MSETest(chex.TestCase, absltest.TestCase):
 
   @chex.all_variants
   def test_psnr_match(self):
-    psnr = self.variant(functools.partial(metrics.psnr, ignore_nans=False))
+    psnr = self.variant(metrics.psnr)
     values_jax = psnr(self._img1, self._img2)
     values_tf = tf.image.psnr(self._img1, self._img2, max_val=1.).numpy()
     np.testing.assert_allclose(values_jax, values_tf, rtol=1e-3, atol=1e-3)
@@ -57,7 +57,7 @@ class MSETest(chex.TestCase, absltest.TestCase):
 
   @chex.all_variants
   def test_simse_invariance(self):
-    simse = self.variant(functools.partial(metrics.simse, ignore_nans=False))
+    simse = self.variant(metrics.simse)
     simse_jax = simse(self._img1, self._img1 * 2.0)
     np.testing.assert_allclose(simse_jax, np.zeros(4), rtol=1e-6, atol=1e-6)
 
