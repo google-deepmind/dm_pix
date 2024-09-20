@@ -32,6 +32,7 @@ def mae(a: chex.Array, b: chex.Array, ignore_nans: bool = False) -> chex.Numeric
   Args:
     a: First image (or set of images).
     b: Second image (or set of images).
+    ignore_nans: If True, will ignore NaNs in the inputs.
 
   Returns:
     MAE between `a` and `b`.
@@ -52,6 +53,7 @@ def mse(a: chex.Array, b: chex.Array, ignore_nans: bool = False) -> chex.Numeric
   Args:
     a: First image (or set of images).
     b: Second image (or set of images).
+    ignore_nans: If True, will ignore NaNs in the inputs.
 
   Returns:
     MSE between `a` and `b`.
@@ -66,7 +68,7 @@ def mse(a: chex.Array, b: chex.Array, ignore_nans: bool = False) -> chex.Numeric
   return jnp.mean(jnp.square(a - b), axis=(-3, -2, -1))
 
 
-def psnr(a: chex.Array, b: chex.Array) -> chex.Numeric:
+def psnr(a: chex.Array, b: chex.Array, ignore_nans: bool = False) -> chex.Array:
   """Returns the Peak Signal-to-Noise Ratio between `a` and `b`.
 
   Assumes that the dynamic range of the images (the difference between the
@@ -75,6 +77,7 @@ def psnr(a: chex.Array, b: chex.Array) -> chex.Numeric:
   Args:
     a: First image (or set of images).
     b: Second image (or set of images).
+    ignore_nans: If True, will ignore NaNs in the inputs.
 
   Returns:
     PSNR in decibels between `a` and `b`.
@@ -84,15 +87,16 @@ def psnr(a: chex.Array, b: chex.Array) -> chex.Numeric:
   chex.assert_rank([a, b], {3, 4})
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])
-  return -10.0 * jnp.log(mse(a, b)) / jnp.log(10.0)
+  return -10.0 * jnp.log(mse(a, b, ignore_nans=ignore_nans)) / jnp.log(10.0)
 
 
-def rmse(a: chex.Array, b: chex.Array) -> chex.Numeric:
+def rmse(a: chex.Array, b: chex.Array, ignore_nans: bool = False) -> chex.Array:
   """Returns the Root Mean Squared Error between `a` and `b`.
 
   Args:
     a: First image (or set of images).
     b: Second image (or set of images).
+    ignore_nans: If True, will ignore NaNs in the inputs.
 
   Returns:
     RMSE between `a` and `b`.
@@ -102,10 +106,10 @@ def rmse(a: chex.Array, b: chex.Array) -> chex.Numeric:
   chex.assert_rank([a, b], {3, 4})
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])
-  return jnp.sqrt(mse(a, b))
+  return jnp.sqrt(mse(a, b, ignore_nans=ignore_nans))
 
 
-def simse(a: chex.Array, b: chex.Array) -> chex.Numeric:
+def simse(a: chex.Array, b: chex.Array, ignore_nans: bool = False) -> chex.Array:
   """Returns the Scale-Invariant Mean Squared Error between `a` and `b`.
 
   For each image pair, a scaling factor for `b` is computed as the solution to
@@ -124,6 +128,7 @@ def simse(a: chex.Array, b: chex.Array) -> chex.Numeric:
   Args:
     a: First image (or set of images).
     b: Second image (or set of images).
+    ignore_nans: If True, will ignore NaNs in the inputs.
 
   Returns:
     SIMSE between `a` and `b`.
@@ -137,7 +142,7 @@ def simse(a: chex.Array, b: chex.Array) -> chex.Numeric:
   a_dot_b = (a * b).sum(axis=(-3, -2, -1), keepdims=True)
   b_dot_b = (b * b).sum(axis=(-3, -2, -1), keepdims=True)
   alpha = a_dot_b / b_dot_b
-  return mse(a, alpha * b)
+  return mse(a, alpha * b, ignore_nans=ignore_nans)
 
 
 def ssim(
@@ -181,6 +186,7 @@ def ssim(
     filter_fn: An optional argument for overriding the filter function used by
       SSIM, which would otherwise be a 2D Gaussian blur specified by filter_size
       and filter_sigma.
+    ignore_nans: If True, will ignore NaNs in the inputs.
 
   Returns:
     Each image's mean SSIM, or a tensor of individual values if `return_map`.
@@ -190,11 +196,6 @@ def ssim(
   chex.assert_rank([a, b], {3, 4})
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])
-
-  mask = ~(jnp.isnan(a) | jnp.isnan(b))
-
-  a = jnp.where(mask, a, 0.0)
-  b = jnp.where(mask, b, 0.0) 
 
   if filter_fn is None:
     # Construct a 1D Gaussian blur filter.

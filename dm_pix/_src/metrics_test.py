@@ -50,10 +50,22 @@ class MSETest(chex.TestCase, absltest.TestCase):
     np.testing.assert_allclose(values_jax, values_tf, rtol=1e-3, atol=1e-3)
 
   @chex.all_variants
+  def test_psnr_ignore_nans(self):
+    psnr = self.variant(functools.partial(metrics.psnr, ignore_nans=True))
+    values_jax_nan = psnr(self._img1.at[:, 0, 0, 0].set(np.nan), self._img1.at[:, 0, 0, 0].set(np.nan))
+    assert not np.any(np.isnan(values_jax_nan))
+
+  @chex.all_variants
   def test_simse_invariance(self):
     simse = self.variant(metrics.simse)
     simse_jax = simse(self._img1, self._img1 * 2.0)
     np.testing.assert_allclose(simse_jax, np.zeros(4), rtol=1e-6, atol=1e-6)
+
+  @chex.all_variants
+  def test_simse_ignore_nans(self):
+    simse = self.variant(functools.partial(metrics.simse, ignore_nans=True))
+    simse_jax_nan = simse(self._img1.at[:, 0, 0, 0].set(0), self._img1.at[:, 0, 0, 0].set(np.nan))
+    assert not np.any(np.isnan(simse_jax_nan))
 
 
 class SSIMTests(chex.TestCase, absltest.TestCase):
@@ -133,6 +145,30 @@ class SSIMTests(chex.TestCase, absltest.TestCase):
     img = np.zeros((64, 64, 3))
     grad = self.variant(jax.grad(metrics.ssim))(img, img)
     np.testing.assert_equal(grad, np.zeros_like(grad))
+
+  @chex.all_variants
+  def test_ssim_ignore_nans(self):
+    """Test that SSIM ignores NaNs."""
+    ssim_fn = self.variant(
+        functools.partial(
+            metrics.ssim,
+            max_val=1.,
+            filter_size=11,
+            filter_sigma=1.5,
+            k1=0.01,
+            k2=0.03,
+            ignore_nans=True,
+        ))
+    key = jax.random.PRNGKey(0)
+    key, key1 = jax.random.split(key)
+    img = jax.random.uniform(
+        key1,
+        shape=(4, 32, 32, 3),
+        minval=0.,
+        maxval=1.,
+    )
+    ssim = ssim_fn(img.at[:, 0, 0, 0].set(np.nan), img.at[:,0, 0, 0].set(np.nan))
+    assert not np.any(np.isnan(ssim))
 
 
 if __name__ == "__main__":
