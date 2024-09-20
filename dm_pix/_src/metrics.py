@@ -42,9 +42,8 @@ def mae(a: chex.Array, b: chex.Array, *, ignore_nans: bool = False) -> chex.Nume
   chex.assert_rank([a, b], {3, 4})
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])
-  if ignore_nans:
-    return jnp.nanmean(jnp.abs(a - b), axis=(-3, -2, -1))
-  return jnp.mean(jnp.abs(a - b), axis=(-3, -2, -1))
+  mean_fn = jnp.nanmean if ignore_nans else jnp.mean
+  return mean_fn(jnp.abs(a - b), axis=(-3, -2, -1))
 
 
 def mse(a: chex.Array, b: chex.Array, *, ignore_nans: bool = False) -> chex.Numeric:
@@ -63,12 +62,11 @@ def mse(a: chex.Array, b: chex.Array, *, ignore_nans: bool = False) -> chex.Nume
   chex.assert_rank([a, b], {3, 4})
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])
-  if ignore_nans:
-    return jnp.nanmean(jnp.square(a - b), axis=(-3, -2, -1))
-  return jnp.mean(jnp.square(a - b), axis=(-3, -2, -1))
+  mean_fn = jnp.nanmean if ignore_nans else jnp.mean
+  return mean_fn(jnp.square(a - b), axis=(-3, -2, -1))
 
 
-def psnr(a: chex.Array, b: chex.Array, *, ignore_nans: bool = False) -> chex.Array:
+def psnr(a: chex.Array, b: chex.Array, *, ignore_nans: bool = False) -> chex.Numeric:
   """Returns the Peak Signal-to-Noise Ratio between `a` and `b`.
 
   Assumes that the dynamic range of the images (the difference between the
@@ -109,7 +107,7 @@ def rmse(a: chex.Array, b: chex.Array, *, ignore_nans: bool = False) -> chex.Arr
   return jnp.sqrt(mse(a, b, ignore_nans=ignore_nans))
 
 
-def simse(a: chex.Array, b: chex.Array, *, ignore_nans: bool = False) -> chex.Array:
+def simse(a: chex.Array, b: chex.Array, *, ignore_nans: bool = False) -> chex.Numeric:
   """Returns the Scale-Invariant Mean Squared Error between `a` and `b`.
 
   For each image pair, a scaling factor for `b` is computed as the solution to
@@ -139,13 +137,9 @@ def simse(a: chex.Array, b: chex.Array, *, ignore_nans: bool = False) -> chex.Ar
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])
 
-  if ignore_nans:
-    a_dot_b = jnp.nansum((a * b), axis=(-3, -2, -1), keepdims=True)
-    b_dot_b = jnp.nansum((b * b), axis=(-3, -2, -1), keepdims=True)
-  else:
-    a_dot_b = (a * b).sum(axis=(-3, -2, -1), keepdims=True)
-    b_dot_b = (b * b).sum(axis=(-3, -2, -1), keepdims=True)
-
+  sum_fn = jnp.nansum if ignore_nans else jnp.sum
+  a_dot_b = sum_fn((a * b), axis=(-3, -2, -1), keepdims=True)
+  b_dot_b = sum_fn((b * b), axis=(-3, -2, -1), keepdims=True)
   alpha = a_dot_b / b_dot_b
   return mse(a, alpha * b, ignore_nans=ignore_nans) 
 
@@ -268,8 +262,6 @@ def ssim(
   numer = (2 * mu01 + c1) * (2 * sigma01 + c2)
   denom = (mu00 + mu11 + c1) * (sigma00 + sigma11 + c2)
   ssim_map = numer / denom
-  if ignore_nans:
-    ssim_value = jnp.nanmean(ssim_map, axis=tuple(range(-3, 0)))
-  else:
-    ssim_value = jnp.mean(ssim_map, axis=tuple(range(-3, 0)))
+  mean_fn = jnp.nanmean if ignore_nans else jnp.mean
+  ssim_value = mean_fn(ssim_map, axis=tuple(range(-3, 0)))
   return ssim_map if return_map else ssim_value
