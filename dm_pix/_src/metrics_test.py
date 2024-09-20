@@ -64,7 +64,7 @@ class MSETest(chex.TestCase, absltest.TestCase):
   @chex.all_variants
   def test_simse_ignore_nans(self):
     simse = self.variant(functools.partial(metrics.simse, ignore_nans=True))
-    simse_jax_nan = simse(self._img1.at[:, 0, 0, 0].set(0), self._img1.at[:, 0, 0, 0].set(np.nan))
+    simse_jax_nan = simse(self._img1.at[:, 0, 0, 0].set(np.nan), self._img1.at[:, 0, 0, 0].set(np.nan))
     assert not np.any(np.isnan(simse_jax_nan))
 
 
