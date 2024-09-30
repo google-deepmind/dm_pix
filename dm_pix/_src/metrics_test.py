@@ -11,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for dm_pix._src.metrics."""
-
 import functools
 
 from absl.testing import absltest
@@ -32,28 +30,54 @@ class MSETest(chex.TestCase, absltest.TestCase):
     self._img1 = jax.random.uniform(
         key1,
         shape=(4, 32, 32, 3),
-        minval=0.,
-        maxval=1.,
+        minval=0.0,
+        maxval=1.0,
     )
     self._img2 = jax.random.uniform(
         key2,
         shape=(4, 32, 32, 3),
-        minval=0.,
-        maxval=1.,
+        minval=0.0,
+        maxval=1.0,
     )
 
   @chex.all_variants
   def test_psnr_match(self):
     psnr = self.variant(metrics.psnr)
     values_jax = psnr(self._img1, self._img2)
-    values_tf = tf.image.psnr(self._img1, self._img2, max_val=1.).numpy()
+
+    values_tf = tf.image.psnr(self._img1, self._img2, max_val=1.0).numpy()
+
     np.testing.assert_allclose(values_jax, values_tf, rtol=1e-3, atol=1e-3)
+
+  @chex.all_variants
+  def test_psnr_ignore_nans(self):
+    psnr = self.variant(functools.partial(metrics.psnr, ignore_nans=True))
+
+    values_jax_nan = psnr(
+        self._img1.at[:, 0, 0, 0].set(np.nan),
+        self._img1.at[:, 0, 0, 0].set(np.nan),
+    )
+
+    assert not np.any(np.isnan(values_jax_nan))
 
   @chex.all_variants
   def test_simse_invariance(self):
     simse = self.variant(metrics.simse)
+
     simse_jax = simse(self._img1, self._img1 * 2.0)
+
     np.testing.assert_allclose(simse_jax, np.zeros(4), rtol=1e-6, atol=1e-6)
+
+  @chex.all_variants
+  def test_simse_ignore_nans(self):
+    simse = self.variant(functools.partial(metrics.simse, ignore_nans=True))
+
+    simse_jax_nan = simse(
+        self._img1.at[:, 0, 0, 0].set(np.nan),
+        self._img1.at[:, 0, 0, 0].set(np.nan),
+    )
+
+    assert not np.any(np.isnan(simse_jax_nan))
 
 
 class SSIMTests(chex.TestCase, absltest.TestCase):
@@ -65,15 +89,25 @@ class SSIMTests(chex.TestCase, absltest.TestCase):
     key = jax.random.PRNGKey(0)
     for shape in ((2, 12, 12, 3), (12, 12, 3), (2, 12, 15, 3), (17, 12, 3)):
       for _ in range(4):
-        (max_val_key, img0_key, img1_key, filter_size_key, filter_sigma_key,
-         k1_key, k2_key, key) = jax.random.split(key, 8)
-        max_val = jax.random.uniform(max_val_key, minval=0.1, maxval=3.)
+        (
+            max_val_key,
+            img0_key,
+            img1_key,
+            filter_size_key,
+            filter_sigma_key,
+            k1_key,
+            k2_key,
+            key,
+        ) = jax.random.split(key, 8)
+        max_val = jax.random.uniform(max_val_key, minval=0.1, maxval=3.0)
         img0 = max_val * jax.random.uniform(img0_key, shape=shape)
         img1 = max_val * jax.random.uniform(img1_key, shape=shape)
         filter_size = jax.random.randint(
-            filter_size_key, shape=(), minval=1, maxval=10)
+            filter_size_key, shape=(), minval=1, maxval=10
+        )
         filter_sigma = jax.random.uniform(
-            filter_sigma_key, shape=(), minval=0.1, maxval=10.)
+            filter_sigma_key, shape=(), minval=0.1, maxval=10.0
+        )
         k1 = jax.random.uniform(k1_key, shape=(), minval=0.001, maxval=0.1)
         k2 = jax.random.uniform(k2_key, shape=(), minval=0.001, maxval=0.1)
 
@@ -84,7 +118,8 @@ class SSIMTests(chex.TestCase, absltest.TestCase):
             filter_size=filter_size,
             filter_sigma=filter_sigma,
             k1=k1,
-            k2=k2).numpy()
+            k2=k2,
+        ).numpy()
         for return_map in [False, True]:
           ssim_fn = self.variant(
               functools.partial(
@@ -95,18 +130,19 @@ class SSIMTests(chex.TestCase, absltest.TestCase):
                   k1=k1,
                   k2=k2,
                   return_map=return_map,
-              ))
+              )
+          )
+
           ssim = ssim_fn(img0, img1)
+
           if not return_map:
             np.testing.assert_allclose(ssim, ssim_gt, atol=1e-5, rtol=1e-5)
           else:
             np.testing.assert_allclose(
-                np.mean(ssim, list(range(-3, 0))),
-                ssim_gt,
-                atol=1e-5,
-                rtol=1e-5)
-          self.assertLessEqual(np.max(ssim), 1.)
-          self.assertGreaterEqual(np.min(ssim), -1.)
+                np.mean(ssim, list(range(-3, 0))), ssim_gt, atol=1e-5, rtol=1e-5
+            )
+          self.assertLessEqual(np.max(ssim), 1.0)
+          self.assertGreaterEqual(np.min(ssim), -1.0)
 
   @chex.all_variants
   def test_ssim_lowerbound(self):
@@ -118,21 +154,55 @@ class SSIMTests(chex.TestCase, absltest.TestCase):
     ssim_fn = self.variant(
         functools.partial(
             metrics.ssim,
-            max_val=1.,
+            max_val=1.0,
             filter_size=filter_size,
             filter_sigma=1.5,
             k1=eps,
             k2=eps,
-        ))
+        )
+    )
+
     ssim = ssim_fn(img, -img)
-    np.testing.assert_allclose(ssim, -np.ones_like(ssim), atol=1E-5, rtol=1E-5)
+
+    np.testing.assert_allclose(ssim, -np.ones_like(ssim), atol=1e-5, rtol=1e-5)
 
   @chex.all_variants
   def test_ssim_finite_grad(self):
     """Test that SSIM produces a finite gradient on large flat regions."""
     img = np.zeros((64, 64, 3))
+
     grad = self.variant(jax.grad(metrics.ssim))(img, img)
+
     np.testing.assert_equal(grad, np.zeros_like(grad))
+
+  @chex.all_variants
+  def test_ssim_ignore_nans(self):
+    """Test that SSIM ignores NaNs."""
+    ssim_fn = self.variant(
+        functools.partial(
+            metrics.ssim,
+            max_val=1.0,
+            filter_size=11,
+            filter_sigma=1.5,
+            k1=0.01,
+            k2=0.03,
+            ignore_nans=True,
+        )
+    )
+    key = jax.random.PRNGKey(0)
+    _, key1 = jax.random.split(key)
+    img = jax.random.uniform(
+        key1,
+        shape=(4, 32, 32, 3),
+        minval=0.0,
+        maxval=1.0,
+    )
+
+    ssim = ssim_fn(
+        img.at[:, 0, 0, 0].set(np.nan), img.at[:, 0, 0, 0].set(np.nan)
+    )
+
+    assert not np.any(np.isnan(ssim))
 
 
 if __name__ == "__main__":
