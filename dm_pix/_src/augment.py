@@ -715,7 +715,7 @@ def affine_transform(
 
   # Alter coordinates to account for offset.
   offset = jnp.full((3,), fill_value=offset)
-  coordinates += jnp.reshape(a=offset, newshape=(*offset.shape, 1, 1, 1))
+  coordinates += jnp.reshape(offset, (*offset.shape, 1, 1, 1))
 
   interpolate_function = _get_interpolate_function(
       mode=mode,
