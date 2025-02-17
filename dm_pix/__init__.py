@@ -20,7 +20,7 @@ from dm_pix._src import interpolation
 from dm_pix._src import metrics
 from dm_pix._src import patch
 
-__version__ = "0.4.3"
+__version__ = "0.4.4"
 
 # Augmentations.
 adjust_brightness = augment.adjust_brightness
