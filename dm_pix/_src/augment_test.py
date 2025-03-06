@@ -189,8 +189,8 @@ class _ImageAugmentationTest(parameterized.TestCase):
         probability=(0., 1.))
 
   # Due to a bug in scipy we cannot test all available modes, refer to these
-  # issues for more information: https://github.com/google/jax/issues/11097,
-  # https://github.com/google/jax/issues/11097
+  # issues for more information: https://github.com/jax-ml/jax/issues/11097,
+  # https://github.com/jax-ml/jax/issues/11097
   @parameterized.named_parameters(
       ("in_range_nearest_0", _RAND_FLOATS_IN_RANGE, "nearest", 0),
       ("in_range_nearest_1", _RAND_FLOATS_IN_RANGE, "nearest", 1),
