@@ -71,15 +71,16 @@ def _make_linear_interpolation_indices_flat_nd(
     The indices into the flattened input and their weights.
   """
   coordinates = jnp.asarray(coordinates)
-  shape = jnp.asarray(shape)
+  shape = jnp.asarray(shape)  # pyrefly: ignore[bad-assignment]
 
-  if shape.shape[0] != coordinates.shape[0]:
+  if shape.shape[0] != coordinates.shape[0]:  # pyrefly: ignore[missing-attribute]
     raise ValueError(
+        # pyrefly: ignore[missing-attribute]
         (f"{coordinates.shape[0]}-dimensional coordinates provided for "
          f"{shape.shape[0]}-dimensional input"))
 
   lower_nd, upper_nd, weights_nd = _make_linear_interpolation_indices_nd(
-      coordinates, shape)
+      coordinates, shape)  # pyrefly: ignore[bad-argument-type]
 
   # Here we want to translate e.g. a 3D-disposed indices to linear ones, since
   # we have to index on the flattened source, so:
@@ -91,11 +92,11 @@ def _make_linear_interpolation_indices_flat_nd(
   # column (3rd axis), 2 values to move to get to the same position in the next
   # row (2nd axis) and 4*2=8 values to move to get to the same position on the
   # 1st axis.
-  strides = jnp.concatenate([jnp.cumprod(shape[:0:-1])[::-1], jnp.array([1])])
+  strides = jnp.concatenate([jnp.cumprod(shape[:0:-1])[::-1], jnp.array([1])])  # pyrefly: ignore[bad-argument-type]
 
   # Array of 2^n rows where the ith row is the binary representation of i.
   binary_array = jnp.array(
-      list(itertools.product([0, 1], repeat=shape.shape[0])))
+      list(itertools.product([0, 1], repeat=shape.shape[0])))  # pyrefly: ignore[missing-attribute]
 
   # Expand dimensions to allow broadcasting `strides` and `binary_array` to
   # every coordinate.
@@ -127,7 +128,7 @@ def _linear_interpolate_using_indices_nd(
     weights: chex.Array,
 ) -> chex.Array:
   """Interpolates linearly on `volume` using `indices` and `weights`."""
-  target = jnp.sum(weights * volume[indices], axis=0)
+  target = jnp.sum(weights * volume[indices], axis=0)  # pyrefly: ignore[bad-index]
   if jnp.issubdtype(volume.dtype, jnp.integer):
     target = _round_half_away_from_zero(target)
   return target.astype(volume.dtype)
@@ -205,12 +206,12 @@ def flat_nd_linear_interpolate_constant(
   # boundaries.
   is_in_bounds = jnp.full(coordinates.shape[1:], True)
   for dim, dim_size in enumerate(volume_shape):
-    is_in_bounds = jnp.logical_and(is_in_bounds, coordinates[dim] >= 0)
+    is_in_bounds = jnp.logical_and(is_in_bounds, coordinates[dim] >= 0)  # pyrefly: ignore[bad-index]
     is_in_bounds = jnp.logical_and(is_in_bounds,
-                                   coordinates[dim] <= dim_size - 1)
+                                   coordinates[dim] <= dim_size - 1)  # pyrefly: ignore[bad-index]
 
   return flat_nd_linear_interpolate(
       volume,
       coordinates,
       unflattened_vol_shape=unflattened_vol_shape
-  ) * is_in_bounds + (1. - is_in_bounds) * cval
+  ) * is_in_bounds + (1. - is_in_bounds) * cval  # pyrefly: ignore[unsupported-operation]

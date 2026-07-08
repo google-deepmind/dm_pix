@@ -43,7 +43,7 @@ def split_channels(
 
   chex.assert_axis_dimension(image, axis=channel_axis, expected=3)
   split_axes = jnp.split(image, 3, axis=channel_axis)
-  return tuple(map(lambda x: jnp.squeeze(x, axis=channel_axis), split_axes))
+  return tuple(map(lambda x: jnp.squeeze(x, axis=channel_axis), split_axes))  # pyrefly: ignore[bad-return]
 
 
 def rgb_to_hsv(
@@ -129,9 +129,9 @@ def rgb_planes_to_hsv_planes(
   norm = 1. / (6. * safe_range)
 
   hue = jnp.where(value == green,
-                  norm * (blue - red) + 2. / 6.,
-                  norm * (red - green) + 4. / 6.)
-  hue = jnp.where(value == red, norm * (green - blue), hue)
+                  norm * (blue - red) + 2. / 6.,  # pyrefly: ignore[unsupported-operation]
+                  norm * (red - green) + 4. / 6.)  # pyrefly: ignore[unsupported-operation]
+  hue = jnp.where(value == red, norm * (green - blue), hue)  # pyrefly: ignore[unsupported-operation]
   hue = jnp.where(range_ > 0, hue, 0.) + (hue < 0.)
 
   return hue, saturation, value
@@ -159,7 +159,7 @@ def hsv_planes_to_rgb_planes(
   """
   # DO NOT REMOVE - Logging usage.
 
-  dh = (hue % 1.0) * 6.  # Wrap when hue >= 360°.
+  dh = (hue % 1.0) * 6.  # Wrap when hue >= 360°.  # pyrefly: ignore[unsupported-operation]
   dr = jnp.clip(jnp.abs(dh - 3.) - 1., 0., 1.)
   dg = jnp.clip(2. - jnp.abs(dh - 2.), 0., 1.)
   db = jnp.clip(2. - jnp.abs(dh - 4.), 0., 1.)
@@ -235,7 +235,7 @@ def hsl_to_rgb(
 
   h, s, l = split_channels(image_hsl, channel_axis)
 
-  m2 = jnp.where(l <= 0.5, l * (1 + s), l + s - l * s)
+  m2 = jnp.where(l <= 0.5, l * (1 + s), l + s - l * s)  # pyrefly: ignore[unsupported-operation]
   m1 = 2 * l - m2
 
   def _f(hue):
@@ -247,7 +247,7 @@ def hsl_to_rgb(
             jnp.where(hue < 2 / 3, m1 + 6 * (m2 - m1) * (2 / 3 - hue), m1)))
 
   image_rgb = jnp.stack([_f(h + 1 / 3), _f(h), _f(h - 1 / 3)], axis=-1)
-  return jnp.where(s[..., jnp.newaxis] == 0, l[..., jnp.newaxis], image_rgb)
+  return jnp.where(s[..., jnp.newaxis] == 0, l[..., jnp.newaxis], image_rgb)  # pyrefly: ignore[bad-index]
 
 
 def rgb_to_grayscale(

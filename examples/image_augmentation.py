@@ -31,7 +31,7 @@ def main(_) -> None:
 
   # Flip up-down the image and visual it.
   flip_up_down_image = pix.flip_up_down(image=image)
-  _imshow(flip_up_down_image)
+  _imshow(flip_up_down_image)  # pyrefly: ignore[bad-argument-type]
 
   # Apply a Gaussian filter to the image and visual it.
   gaussian_blur_image = pix.gaussian_blur(
@@ -39,35 +39,35 @@ def main(_) -> None:
       sigma=_KERNEL_SIGMA,
       kernel_size=_KERNEL_SIZE,
   )
-  _imshow(gaussian_blur_image)
+  _imshow(gaussian_blur_image)  # pyrefly: ignore[bad-argument-type]
 
   # Change image brightness and visual it.
   adjust_brightness_image = pix.adjust_brightness(
       image=image,
       delta=_MAGIC_VALUE,
   )
-  _imshow(adjust_brightness_image)
+  _imshow(adjust_brightness_image)  # pyrefly: ignore[bad-argument-type]
 
   # Change image contrast and visual it.
   adjust_contrast_image = pix.adjust_contrast(
       image=image,
       factor=_MAGIC_VALUE,
   )
-  _imshow(adjust_contrast_image)
+  _imshow(adjust_contrast_image)  # pyrefly: ignore[bad-argument-type]
 
   # Change image gamma and visual it.
   adjust_gamma_image = pix.adjust_gamma(
       image=image,
       gamma=_MAGIC_VALUE,
   )
-  _imshow(adjust_gamma_image)
+  _imshow(adjust_gamma_image)  # pyrefly: ignore[bad-argument-type]
 
   # Change image hue and visual it.
   adjust_hue_image = pix.adjust_hue(
       image=image,
       delta=_MAGIC_VALUE,
   )
-  _imshow(adjust_hue_image)
+  _imshow(adjust_hue_image)  # pyrefly: ignore[bad-argument-type]
 
 
 def _get_image():

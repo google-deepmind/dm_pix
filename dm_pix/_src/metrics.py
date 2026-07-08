@@ -48,7 +48,7 @@ def mae(
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])
   mean_fn = jnp.nanmean if ignore_nans else jnp.mean
-  return mean_fn(jnp.abs(a - b), axis=(-3, -2, -1))
+  return mean_fn(jnp.abs(a - b), axis=(-3, -2, -1))  # pyrefly: ignore[unsupported-operation]
 
 
 def mse(
@@ -73,7 +73,7 @@ def mse(
   chex.assert_type([a, b], float)
   chex.assert_equal_shape([a, b])
   mean_fn = jnp.nanmean if ignore_nans else jnp.mean
-  return mean_fn(jnp.square(a - b), axis=(-3, -2, -1))
+  return mean_fn(jnp.square(a - b), axis=(-3, -2, -1))  # pyrefly: ignore[unsupported-operation]
 
 
 def psnr(
@@ -269,9 +269,9 @@ def ssim(
   mu00 = mu0 * mu0
   mu11 = mu1 * mu1
   mu01 = mu0 * mu1
-  sigma00 = filter_fn(a**2) - mu00
-  sigma11 = filter_fn(b**2) - mu11
-  sigma01 = filter_fn(a * b) - mu01
+  sigma00 = filter_fn(a**2) - mu00  # pyrefly: ignore[unsupported-operation]
+  sigma11 = filter_fn(b**2) - mu11  # pyrefly: ignore[unsupported-operation]
+  sigma01 = filter_fn(a * b) - mu01  # pyrefly: ignore[unsupported-operation]
 
   # Clip the variances and covariances to valid values.
   # Variance must be non-negative:

@@ -110,7 +110,7 @@ class ColorConversionTest(
     for rgb in generate_test_images(*test_images.value):
       hsv_tf = tf.image.rgb_to_hsv(rgb).numpy()
       if not channel_last:
-        rgb = rgb.swapaxes(-1, -3)
+        rgb = rgb.swapaxes(-1, -3)  # pyrefly: ignore[bad-argument-type]
       hsv_jax = rgb_to_hsv(rgb)
       if not channel_last:
         hsv_jax = hsv_jax.swapaxes(-1, -3)
@@ -122,7 +122,7 @@ class ColorConversionTest(
     # images to avoid making the tests run too slow.
     rgb = generate_test_images(*test_images.value)[0]
     if not channel_last:
-      rgb = rgb.swapaxes(-1, -3)
+      rgb = rgb.swapaxes(-1, -3)  # pyrefly: ignore[bad-argument-type]
     jacobian = jax.jacrev(rgb_to_hsv)(rgb)
     self.assertFalse(jnp.isnan(jacobian).any(), "NaNs in RGB to HSV gradients")
 
@@ -271,7 +271,7 @@ class ColorConversionTest(
     for rgb in generate_test_images(*test_images.value):
       grayscale_tf = tf.image.rgb_to_grayscale(rgb).numpy()
       if not channel_last:
-        rgb = rgb.swapaxes(-1, -3)
+        rgb = rgb.swapaxes(-1, -3)  # pyrefly: ignore[bad-argument-type]
       grayscale_jax = rgb_to_grayscale(rgb)
       if not channel_last:
         grayscale_jax = grayscale_jax.swapaxes(-1, -3)

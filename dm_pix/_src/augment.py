@@ -131,7 +131,7 @@ def adjust_hue(
 
   rgb = color_conversion.split_channels(image, channel_axis)
   hue, saturation, value = color_conversion.rgb_planes_to_hsv_planes(*rgb)
-  rgb_adjusted = color_conversion.hsv_planes_to_rgb_planes((hue + delta) % 1.0,
+  rgb_adjusted = color_conversion.hsv_planes_to_rgb_planes((hue + delta) % 1.0,  # pyrefly: ignore[bad-argument-type, unsupported-operation]
                                                            saturation, value)
   return jnp.stack(rgb_adjusted, axis=channel_axis)
 
@@ -225,11 +225,11 @@ def elastic_deformation(
   shift_map_i = gaussian_blur(
       image=noise_i,
       sigma=sigma,
-      kernel_size=kernel_size) * alpha
+      kernel_size=kernel_size) * alpha  # pyrefly: ignore[bad-argument-type]
   shift_map_j = gaussian_blur(
       image=noise_j,
       sigma=sigma,
-      kernel_size=kernel_size) * alpha
+      kernel_size=kernel_size) * alpha  # pyrefly: ignore[bad-argument-type]
 
   meshgrid = list(
       jnp.meshgrid(
@@ -244,7 +244,7 @@ def elastic_deformation(
   )
   transformed_image = jnp.concatenate([
       interpolate_function(
-          image[..., channel, jnp.newaxis], jnp.asarray(meshgrid))
+          image[..., channel, jnp.newaxis], jnp.asarray(meshgrid))  # pyrefly: ignore[bad-index]
       for channel in range(image.shape[-1])
   ], axis=-1)
 
@@ -287,9 +287,9 @@ def center_crop(
   )
   center_h, center_w = current_height // 2, current_width // 2
 
-  left = max(center_w - (width // 2), 0)
+  left = max(center_w - (width // 2), 0)  # pyrefly: ignore[unsupported-operation]
   right = min(left + width, current_width)
-  top = max(center_h - (height // 2), 0)
+  top = max(center_h - (height // 2), 0)  # pyrefly: ignore[unsupported-operation]
   bottom = min(top + height, current_height)
 
   if _channels_last(image, channel_axis):
@@ -304,7 +304,7 @@ def center_crop(
     limit_indices = (batch, *limit_indices)
 
   return jax.lax.slice(
-      image, start_indices=start_indices, limit_indices=limit_indices
+      image, start_indices=start_indices, limit_indices=limit_indices  # pyrefly: ignore[bad-argument-type]
   )
 
 
@@ -407,8 +407,8 @@ def resize_with_crop_or_pad(
   )
   return pad_to_size(
       image,
-      target_height=target_height,
-      target_width=target_width,
+      target_height=target_height,  # pyrefly: ignore[bad-argument-type]
+      target_width=target_width,  # pyrefly: ignore[bad-argument-type]
       channel_axis=channel_axis,
       mode=pad_mode,
       pad_kwargs=pad_kwargs,
@@ -507,7 +507,7 @@ def gaussian_blur(
 
   expand_batch_dim = image.ndim == 3
   if expand_batch_dim:
-    image = image[jnp.newaxis, ...]
+    image = image[jnp.newaxis, ...]  # pyrefly: ignore[bad-index]
   blurred = _depthwise_conv2d(
       image,
       kernel=blur_h,
@@ -710,8 +710,8 @@ def affine_transform(
       [jnp.expand_dims(x, axis=-1) for x in meshgrid], axis=-1)
 
   if matrix.shape == (4, 4) or matrix.shape == (3, 4):
-    offset = matrix[:image.ndim, image.ndim]
-    matrix = matrix[:image.ndim, :image.ndim]
+    offset = matrix[:image.ndim, image.ndim]  # pyrefly: ignore[bad-index]
+    matrix = matrix[:image.ndim, :image.ndim]  # pyrefly: ignore[bad-index]
 
   coordinates = indices @ matrix.T
   coordinates = jnp.moveaxis(coordinates, source=-1, destination=0)
@@ -823,7 +823,7 @@ def random_brightness(
   """`adjust_brightness(...)` with random delta in `[-max_delta, max_delta)`."""
   # DO NOT REMOVE - Logging usage.
 
-  delta = jax.random.uniform(key, (), minval=-max_delta, maxval=max_delta)
+  delta = jax.random.uniform(key, (), minval=-max_delta, maxval=max_delta)  # pyrefly: ignore[unsupported-operation]
   return adjust_brightness(image, delta)
 
 
@@ -854,7 +854,7 @@ def random_hue(
   """`adjust_hue(...)` with random delta in `[-max_delta, max_delta)`."""
   # DO NOT REMOVE - Logging usage.
 
-  delta = jax.random.uniform(key, (), minval=-max_delta, maxval=max_delta)
+  delta = jax.random.uniform(key, (), minval=-max_delta, maxval=max_delta)  # pyrefly: ignore[unsupported-operation]
   return adjust_hue(image, delta, channel_axis=channel_axis)
 
 
@@ -917,7 +917,7 @@ def random_crop(
   assert len(image_shape) == len(crop_sizes), (
       f"Number of image dims {len(image_shape)} and number of crop_sizes "
       f"{len(crop_sizes)} do not match.")
-  assert image_shape >= crop_sizes, (
+  assert image_shape >= crop_sizes, (  # pyrefly: ignore[unsupported-operation]
       f"Crop sizes {crop_sizes} should be a subset of image size {image_shape} "
       "in each dimension .")
   random_keys = jax.random.split(key, len(crop_sizes))
@@ -926,7 +926,7 @@ def random_crop(
       jax.random.randint(k, (), 0, img_size - crop_size + 1)
       for k, img_size, crop_size in zip(random_keys, image_shape, crop_sizes)
   ]
-  out = jax.lax.dynamic_slice(image, slice_starts, crop_sizes)
+  out = jax.lax.dynamic_slice(image, slice_starts, crop_sizes)  # pyrefly: ignore[bad-argument-type]
 
   return out
 
@@ -964,8 +964,8 @@ def _depthwise_conv2d(
     dimension_numbers as the input.
   """
   return jax.lax.conv_general_dilated(
-      inputs,
-      kernel,
+      inputs,  # pyrefly: ignore[bad-argument-type]
+      kernel,  # pyrefly: ignore[bad-argument-type]
       strides,
       padding,
       feature_group_count=inputs.shape[channel_axis],
