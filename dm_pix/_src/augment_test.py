@@ -188,6 +188,12 @@ class _ImageAugmentationTest(parameterized.TestCase):
         reference_fn=None,
         probability=(0., 1.))
 
+  def test_random_flip_left_right_channel_axis(self):
+    image = jnp.arange(2 * 3 * 4, dtype=jnp.float32).reshape((3, 2, 4))
+    result = augment.random_flip_left_right(
+        jax.random.PRNGKey(0), image, probability=1., channel_axis=0)
+    np.testing.assert_array_equal(result, jnp.flip(image, axis=2))
+
   # Due to a bug in scipy we cannot test all available modes, refer to these
   # issues for more information: https://github.com/jax-ml/jax/issues/11097,
   # https://github.com/jax-ml/jax/issues/11097
