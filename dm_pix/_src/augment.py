@@ -772,6 +772,7 @@ def random_flip_left_right(
     image: chex.Array,
     *,
     probability: chex.Numeric = 0.5,
+    channel_axis: int = -1,
 ) -> chex.Array:
   """Applies `flip_left_right` with a given probability.
 
@@ -781,6 +782,7 @@ def random_flip_left_right(
       ...HWC or ...CHW.
     probability: the probability of applying flip_left_right transform. Must be
       a value in [0, 1].
+    channel_axis: the index of the channel axis.
 
   Returns:
     A left-right flipped image if condition is met, otherwise original image.
@@ -788,7 +790,12 @@ def random_flip_left_right(
   # DO NOT REMOVE - Logging usage.
 
   should_transform = jax.random.bernoulli(key=key, p=probability)
-  return jax.lax.cond(should_transform, flip_left_right, lambda x: x, image)
+  return jax.lax.cond(
+      should_transform,
+      lambda x: flip_left_right(x, channel_axis=channel_axis),
+      lambda x: x,
+      image,
+  )
 
 
 def random_flip_up_down(
