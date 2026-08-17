@@ -605,6 +605,32 @@ class TestCustom(parameterized.TestCase):
     )
     self.assertEqual(result.shape, (2, 3, 6, 6))
 
+  @parameterized.named_parameters(
+      ("scalar", 0.0),
+      ("0d_array", lambda: jnp.array(0.0)),
+      ("1d_array", lambda: jnp.array([0.0])),
+  )
+  def test_zero_sigma_for_gaussian_blur(self, sigma):
+    sigma = sigma() if callable(sigma) else sigma
+    image = jax.random.uniform(jax.random.PRNGKey(0), shape=(4, 4, 3))
+    result = augment.gaussian_blur(image, sigma=sigma, kernel_size=3)
+    np.testing.assert_array_equal(result, image)
+    result_jit = jax.jit(augment.gaussian_blur, static_argnames="kernel_size")(
+        image, sigma=sigma, kernel_size=3
+    )
+    np.testing.assert_array_equal(result_jit, image)
+
+  def test_gaussian_blur_sigma_types(self):
+    image = jax.random.uniform(jax.random.PRNGKey(0), shape=(4, 4, 3))
+    expected = augment.gaussian_blur(image, sigma=0.5, kernel_size=3)
+    for sigma in (jnp.array(0.5), jnp.array([0.5])):
+      result = augment.gaussian_blur(image, sigma=sigma, kernel_size=3)
+      np.testing.assert_allclose(result, expected, rtol=1e-6, atol=1e-6)
+
+  def test_negative_scalar_sigma_for_gaussian_blur(self):
+    image = jnp.zeros((4, 4, 3))
+    with self.assertRaises(AssertionError):
+      augment.gaussian_blur(image, sigma=-1.0, kernel_size=3)
 
 if __name__ == "__main__":
   os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
