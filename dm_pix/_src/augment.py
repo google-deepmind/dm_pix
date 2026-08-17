@@ -480,7 +480,9 @@ def gaussian_blur(
   Args:
     image: the input image, as a [0-1] float tensor. Should have 3 or 4
       dimensions with two spatial dimensions.
-    sigma: the standard deviation (in pixels) of the gaussian kernel.
+    sigma: the standard deviation (in pixels) of the gaussian kernel. If it is
+      0, the image is returned without blurring. If it is negative, an error is
+      raised.
     kernel_size: the size (in pixels) of the square gaussian kernel. Will be
       "rounded" to the next odd integer.
     padding: either "SAME" or "VALID", passed to the underlying convolution.
@@ -491,6 +493,8 @@ def gaussian_blur(
   """
   # DO NOT REMOVE - Logging usage.
 
+  if isinstance(sigma, chex.Scalar):
+    chex.assert_scalar_non_negative(sigma)
   chex.assert_rank(image, {3, 4})
   data_format = "NHWC" if _channels_last(image, channel_axis) else "NCHW"
   dimension_numbers = (data_format, "HWIO", data_format)
@@ -498,7 +502,11 @@ def gaussian_blur(
   radius = int(kernel_size / 2)
   kernel_size_ = 2 * radius + 1
   x = jnp.arange(-radius, radius + 1).astype(jnp.float32)
-  blur_filter = jnp.exp(-x**2 / (2. * sigma**2))
+  # Make sure that sigma is not zero to avoid division by zero. If sigma is
+  # zero, we will return the original image at the end of the function for JIT
+  # compilation.
+  safe_sigma = jnp.where(sigma == 0, 1.0, sigma)
+  blur_filter = jnp.exp(-(x**2) / (2.0 * safe_sigma**2))
   blur_filter = blur_filter / jnp.sum(blur_filter)
   blur_v = jnp.reshape(blur_filter, [kernel_size_, 1, 1, 1])
   blur_h = jnp.reshape(blur_filter, [1, kernel_size_, 1, 1])
@@ -524,7 +532,8 @@ def gaussian_blur(
       dimension_numbers=dimension_numbers)
   if expand_batch_dim:
     blurred = jnp.squeeze(blurred, axis=0)
-  return blurred
+    image = jnp.squeeze(image, axis=0)
+  return jnp.where(sigma == 0, image, blurred)
 
 
 def rot90(
