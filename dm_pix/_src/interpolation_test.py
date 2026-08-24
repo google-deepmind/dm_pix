@@ -11,9 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for dm_pix._src.interpolation."""
-
 import itertools
+import os
 from typing import Sequence, Tuple
 
 from absl.testing import absltest
@@ -28,7 +27,8 @@ _CVALS = (0.0, 1.0, -2.0)
 
 
 def _prepare_inputs(
-    shape_output_coordinates: Tuple[int]) -> Tuple[jnp.ndarray, jnp.ndarray]:
+    shape_output_coordinates: Tuple[int, ...],
+) -> Tuple[jnp.ndarray, jnp.ndarray]:
   """Returns the volume and coordinates to be used in the function under test.
 
   Args:
@@ -189,4 +189,5 @@ class InterpolationTest(chex.TestCase, parameterized.TestCase):
 
 
 if __name__ == "__main__":
+  os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
   absltest.main()

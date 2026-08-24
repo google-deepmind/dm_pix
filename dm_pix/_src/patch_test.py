@@ -11,9 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for dm_pix._src.patch."""
-
 import functools
+import os
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -202,4 +201,5 @@ class PatchTest(chex.TestCase, parameterized.TestCase):
 
 
 if __name__ == '__main__':
+  os.environ['XLA_PYTHON_CLIENT_PREALLOCATE'] = 'false'
   absltest.main()

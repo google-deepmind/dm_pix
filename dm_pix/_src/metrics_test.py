@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import functools
+import os
 
 from absl.testing import absltest
 import chex
@@ -206,4 +207,5 @@ class SSIMTests(chex.TestCase, absltest.TestCase):
 
 
 if __name__ == "__main__":
+  os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
   absltest.main()

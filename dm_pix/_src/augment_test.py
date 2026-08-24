@@ -11,9 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for dm_pix._src.augment."""
-
 import functools
+import os
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -608,5 +607,6 @@ class TestCustom(parameterized.TestCase):
 
 
 if __name__ == "__main__":
+  os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
   jax.config.update("jax_default_matmul_precision", "float32")
   absltest.main()

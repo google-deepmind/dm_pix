@@ -11,11 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for dm_pix._src.color_conversion."""
-
 import colorsys
 import enum
 import functools
+import os
 from typing import Sequence
 
 from absl.testing import parameterized
@@ -285,4 +284,5 @@ class ColorConversionTest(
 
 
 if __name__ == "__main__":
+  os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
   tf.test.main()
