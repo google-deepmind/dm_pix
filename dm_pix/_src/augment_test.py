@@ -590,6 +590,8 @@ class TestCustom(parameterized.TestCase):
     result = augment.pad_to_size(
         image, target_height=3, target_width=3, channel_axis=0
     )
+    self.assertNotIsInstance(result, np.bool_)
+    self.assertNotIsInstance(result, np.number)
     self.assertEqual(result.shape, (1, 3, 3))
     np.testing.assert_array_equal(result[0, 1, 1], 1.0)
     np.testing.assert_array_equal(result[0, 0, :], 0.0)
