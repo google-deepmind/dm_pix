@@ -140,7 +140,7 @@ class SSIMTests(chex.TestCase, absltest.TestCase):
             np.testing.assert_allclose(ssim, ssim_gt, atol=1e-5, rtol=1e-5)
           else:
             np.testing.assert_allclose(
-                np.mean(ssim, list(range(-3, 0))), ssim_gt, atol=1e-5, rtol=1e-5
+                np.mean(ssim, list(range(-3, 0))), ssim_gt, atol=1e-5, rtol=1e-5  # pyrefly: ignore[no-matching-overload]
             )
           self.assertLessEqual(np.max(ssim), 1.0)
           self.assertGreaterEqual(np.min(ssim), -1.0)
