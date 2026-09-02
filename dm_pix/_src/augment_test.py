@@ -605,6 +605,20 @@ class TestCustom(parameterized.TestCase):
     )
     self.assertEqual(result.shape, (2, 3, 6, 6))
 
+  def test_negative_scalar_sigma_for_gaussian_blur(self):
+    image = jnp.zeros((4, 4, 3))
+    with self.assertRaises(AssertionError):
+      augment.gaussian_blur(image, sigma=-1.0, kernel_size=3)
+
+  def test_zero_scalar_sigma_for_gaussian_blur(self):
+    image = jax.random.uniform(jax.random.PRNGKey(0), shape=(4, 4, 3))
+    result = augment.gaussian_blur(image, sigma=0.0, kernel_size=3)
+    np.testing.assert_array_equal(result, image)
+
+  def test_zero_array_sigma_for_gaussian_blur(self):
+    image = jax.random.uniform(jax.random.PRNGKey(0), shape=(4, 4, 3))
+    result = augment.gaussian_blur(image, sigma=jnp.array([0.0]), kernel_size=3)
+    np.testing.assert_array_equal(result, image)
 
 if __name__ == "__main__":
   os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
