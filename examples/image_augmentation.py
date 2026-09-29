@@ -77,7 +77,7 @@ def _get_image():
 def _imshow(image: jnp.ndarray) -> None:
   """Showes the input image using PIL/Pillow backend."""
   image = pil.fromarray(np.asarray(image * 255.).astype(np.uint8), "RGB")
-  image.show()
+  image.show()  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == "__main__":
