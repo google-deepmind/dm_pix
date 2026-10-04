@@ -234,7 +234,7 @@ class ColorConversionTest(
           hsl_to_rgb(image_hsl), rgb_true, atol=1E-5, rtol=1E-5)
 
   @parameterized.product(
-      conversion=('rgb_to_hsl', 'hsl_to_rgb'),
+      conversion=("rgb_to_hsl", "hsl_to_rgb"),
       channel_axis=(0, 1, -2, -1),
       batched=(False, True),
       use_jit=(False, True),
@@ -251,7 +251,7 @@ class ColorConversionTest(
       h, l, s = colorsys.rgb_to_hls(*map(float, pixel))
       hsl.append([h, s, l])
     hsl = np.asarray(hsl, dtype=np.float32).reshape(rgb.shape)
-    image, expected = (rgb, hsl) if conversion == 'rgb_to_hsl' else (hsl, rgb)
+    image, expected = (rgb, hsl) if conversion == "rgb_to_hsl" else (hsl, rgb)
     image = jnp.asarray(np.moveaxis(image, -1, channel_axis))
     expected = np.moveaxis(expected, -1, channel_axis)
     convert = functools.partial(
