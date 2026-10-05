@@ -199,17 +199,21 @@ def rgb_to_hsl(
 
   mask = c_min == c_max
 
-  rc = (c_max - red) / c_diff
-  gc = (c_max - green) / c_diff
-  bc = (c_max - blue) / c_diff
+  # Mask denominators before division so achromatic branches also have
+  # finite gradients, rather than masking undefined quotients afterward.
+  safe_diff = jnp.where(mask, 1., c_diff)
+  rc = (c_max - red) / safe_diff
+  gc = (c_max - green) / safe_diff
+  bc = (c_max - blue) / safe_diff
 
   eps = jnp.finfo(jnp.float32).eps
   h = jnp.where(
       mask, 0,
       (jnp.where(red == c_max, bc - gc,
                  jnp.where(green == c_max, 2 + rc - bc, 4 + gc - rc)) / 6) % 1)
-  s = jnp.where(mask, 0, (c_diff + eps) /
-                (2 * eps + jnp.where(c_sum <= 1, c_sum, 2 - c_sum)))
+  saturation_denominator = jnp.where(
+      mask, 1., 2 * eps + jnp.where(c_sum <= 1, c_sum, 2 - c_sum))
+  s = jnp.where(mask, 0, (c_diff + eps) / saturation_denominator)
   l = c_sum / 2
 
   return jnp.stack([h, s, l], axis=-1)
