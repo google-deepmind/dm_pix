@@ -266,8 +266,8 @@ def center_crop(
   Target height/width given can be greater than the current size of the image
   which results in being a no-op for that dimension.
 
-  In case of odd size along any dimension the bottom/right side gets the extra
-  pixel.
+  When an odd number of pixels is removed along a dimension, the bottom/right
+  side loses the extra pixel, matching the convention used by `pad_to_size`.
 
   Args:
     image: a JAX array representing an image. Assumes that the image is either
@@ -285,11 +285,9 @@ def center_crop(
   batch, current_height, current_width, channel = _get_dimension_values(
       image=image, channel_axis=channel_axis
   )
-  center_h, center_w = current_height // 2, current_width // 2
-
-  left = max(center_w - (width // 2), 0)  # pyrefly: ignore[unsupported-operation]
+  left = max((current_width - width) // 2, 0)  # pyrefly: ignore[unsupported-operation]
   right = min(left + width, current_width)
-  top = max(center_h - (height // 2), 0)  # pyrefly: ignore[unsupported-operation]
+  top = max((current_height - height) // 2, 0)  # pyrefly: ignore[unsupported-operation]
   bottom = min(top + height, current_height)
 
   if _channels_last(image, channel_axis):
