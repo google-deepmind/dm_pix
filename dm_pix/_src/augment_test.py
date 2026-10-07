@@ -523,6 +523,53 @@ class TestCustom(parameterized.TestCase):
   """Tests custom logic that is not covered by reference functions."""
 
   @parameterized.product(
+      shape_and_axis=(
+          ((5, 7, 3), 2),
+          ((5, 7, 3), -1),
+          ((3, 5, 7), 0),
+          ((3, 5, 7), -3),
+          ((2, 5, 7, 3), 3),
+          ((2, 5, 7, 3), -1),
+          ((2, 3, 5, 7), 1),
+          ((2, 3, 5, 7), -3),
+      ),
+      padding=("SAME", "VALID"),
+      jitted=(False, True),
+  )
+  def test_gaussian_blur_channel_axis(self, shape_and_axis, padding, jitted):
+    shape, channel_axis = shape_and_axis
+    image = np.arange(np.prod(shape), dtype=np.float32).reshape(shape)
+    image /= image.size
+    sigma = 0.8
+    weights = np.exp(-np.arange(-1, 2, dtype=np.float64)**2 / (2 * sigma**2))
+    weights /= weights.sum()
+    kernel = np.outer(weights, weights)
+
+    # Filter each channel independently in the reference implementation.
+    channels_last = np.moveaxis(image, channel_axis, -1)
+    if image.ndim == 3:
+      channels_last = channels_last[np.newaxis]
+    expected = np.stack([
+        np.stack([
+            scipy.signal.convolve2d(channel, kernel, mode=padding.lower())
+            for channel in np.moveaxis(batch, -1, 0)
+        ], axis=-1)
+        for batch in channels_last
+    ])
+    if image.ndim == 3:
+      expected = expected[0]
+    expected = np.moveaxis(expected, -1, channel_axis)
+
+    blur = functools.partial(
+        augment.gaussian_blur, sigma=sigma, kernel_size=3,
+        padding=padding, channel_axis=channel_axis)
+    result = jax.jit(blur)(image) if jitted else blur(image)
+    self.assertEqual(result.shape, expected.shape)
+    self.assertEqual(result.dtype, image.dtype)
+    tol = 1e-2 if jax.local_devices()[0].platform == "tpu" else 1e-6
+    np.testing.assert_allclose(result, expected, rtol=tol, atol=tol)
+
+  @parameterized.product(
       images_list=(_RAND_FLOATS_IN_RANGE, _RAND_FLOATS_OUT_OF_RANGE),
       height=(250, 200),
       width=(250, 200),

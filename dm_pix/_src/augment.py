@@ -508,6 +508,8 @@ def gaussian_blur(
   expand_batch_dim = image.ndim == 3
   if expand_batch_dim:
     image = image[jnp.newaxis, ...]  # pyrefly: ignore[bad-index]
+    if channel_axis >= 0:
+      channel_axis += 1
   blurred = _depthwise_conv2d(
       image,
       kernel=blur_h,
