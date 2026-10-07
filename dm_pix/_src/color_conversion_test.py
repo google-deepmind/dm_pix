@@ -233,6 +233,34 @@ class ColorConversionTest(
       np.testing.assert_allclose(
           hsl_to_rgb(image_hsl), rgb_true, atol=1E-5, rtol=1E-5)
 
+  @parameterized.product(
+      conversion=("rgb_to_hsl", "hsl_to_rgb"),
+      channel_axis=(0, 1, -2, -1),
+      batched=(False, True),
+      use_jit=(False, True),
+  )
+  def test_hsl_channel_axis(self, conversion, channel_axis, batched, use_jit):
+    rgb = np.array([
+        [[0., 0., 0.], [1., 1., 1.], [0.5, 0.5, 0.5], [1., 0., 0.]],
+        [[0., 1., 0.], [0., 0., 1.], [0.2, 0.4, 0.7], [0.8, 0.3, 0.1]],
+    ], dtype=np.float32)
+    if batched:
+      rgb = np.stack([rgb, rgb[::-1]])
+    hsl = []
+    for pixel in rgb.reshape(-1, 3):
+      h, l, s = colorsys.rgb_to_hls(*map(float, pixel))
+      hsl.append([h, s, l])
+    hsl = np.asarray(hsl, dtype=np.float32).reshape(rgb.shape)
+    image, expected = (rgb, hsl) if conversion == "rgb_to_hsl" else (hsl, rgb)
+    image = jnp.asarray(np.moveaxis(image, -1, channel_axis))
+    expected = np.moveaxis(expected, -1, channel_axis)
+    convert = functools.partial(
+        getattr(color_conversion, conversion), channel_axis=channel_axis)
+    actual = (jax.jit(convert) if use_jit else convert)(image)
+    self.assertEqual(actual.shape, image.shape)
+    self.assertEqual(actual.dtype, image.dtype)
+    np.testing.assert_allclose(actual, expected, atol=1e-6, rtol=1e-6)
+
   @chex.all_variants
   def test_hsl_rgb_roundtrip(self):
     key = jax.random.PRNGKey(0)
