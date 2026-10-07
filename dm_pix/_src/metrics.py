@@ -278,9 +278,8 @@ def ssim(
   epsilon = jnp.finfo(jnp.float32).eps ** 2
   sigma00 = jnp.maximum(epsilon, sigma00)
   sigma11 = jnp.maximum(epsilon, sigma11)
-  sigma01 = jnp.sign(sigma01) * jnp.minimum(
-      jnp.sqrt(sigma00 * sigma11), jnp.abs(sigma01)
-  )
+  covariance_bound = jnp.sqrt(sigma00 * sigma11)
+  sigma01 = jnp.clip(sigma01, -covariance_bound, covariance_bound)
 
   c1 = (k1 * max_val) ** 2
   c2 = (k2 * max_val) ** 2
