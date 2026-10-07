@@ -179,7 +179,7 @@ class ColorConversionTest(
 
       hsl_true = np.zeros_like(image_rgb)
       for i in range(image_rgb.shape[0]):
-        h, l, s = colorsys.rgb_to_hls(*image_rgb[i, :])
+        h, l, s = colorsys.rgb_to_hls(*image_rgb[i, :])  # pyrefly: ignore[bad-argument-type]
         hsl_true[i, :] = [h, s, l]
 
       image_rgb = np.reshape(image_rgb, _IMG_SHAPE)
@@ -225,7 +225,7 @@ class ColorConversionTest(
       rgb_true = np.zeros_like(image_hsl)
       for i in range(image_hsl.shape[0]):
         h, s, l = image_hsl[i, :]
-        rgb_true[i, :] = colorsys.hls_to_rgb(h, l, s)
+        rgb_true[i, :] = colorsys.hls_to_rgb(h, l, s)  # pyrefly: ignore[bad-argument-type]
 
       rgb_true = np.reshape(rgb_true, _IMG_SHAPE)
       image_hsl = np.reshape(image_hsl, _IMG_SHAPE)
