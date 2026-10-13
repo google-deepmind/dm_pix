@@ -480,7 +480,9 @@ def gaussian_blur(
   Args:
     image: the input image, as a [0-1] float tensor. Should have 3 or 4
       dimensions with two spatial dimensions.
-    sigma: the standard deviation (in pixels) of the gaussian kernel.
+    sigma: the standard deviation (in pixels) of the gaussian kernel. If it is
+      0, the image is returned without blurring. If it is a negative scalar, an
+      error is raised (behavior is undefined for negative traced/array values).
     kernel_size: the size (in pixels) of the square gaussian kernel. Will be
       "rounded" to the next odd integer.
     padding: either "SAME" or "VALID", passed to the underlying convolution.
@@ -492,13 +494,40 @@ def gaussian_blur(
   # DO NOT REMOVE - Logging usage.
 
   chex.assert_rank(image, {3, 4})
+  chex.assert_size(sigma, 1)
+  if isinstance(sigma, chex.Scalar):
+    chex.assert_scalar_non_negative(sigma)
+
+  return jax.lax.cond(
+      jnp.all(jnp.isclose(sigma, 0.0)),
+      lambda x: x,
+      lambda x: _gaussian_blur(
+          x,
+          sigma=sigma,
+          kernel_size=kernel_size,
+          padding=padding,
+          channel_axis=channel_axis,
+      ),
+      image,
+  )
+
+
+def _gaussian_blur(
+    image: chex.Array,
+    sigma: chex.Numeric,
+    kernel_size: float,
+    *,
+    padding: str = "SAME",
+    channel_axis: int = -1,
+) -> chex.Array:
+  """Internal helper for `gaussian_blur` when `sigma > 0`."""
   data_format = "NHWC" if _channels_last(image, channel_axis) else "NCHW"
   dimension_numbers = (data_format, "HWIO", data_format)
   num_channels = image.shape[channel_axis]
   radius = int(kernel_size / 2)
   kernel_size_ = 2 * radius + 1
   x = jnp.arange(-radius, radius + 1).astype(jnp.float32)
-  blur_filter = jnp.exp(-x**2 / (2. * sigma**2))
+  blur_filter = jnp.exp(-(x**2) / (2.0 * sigma**2))
   blur_filter = blur_filter / jnp.sum(blur_filter)
   blur_v = jnp.reshape(blur_filter, [kernel_size_, 1, 1, 1])
   blur_h = jnp.reshape(blur_filter, [1, kernel_size_, 1, 1])
@@ -514,14 +543,16 @@ def gaussian_blur(
       strides=(1, 1),
       padding=padding,
       channel_axis=channel_axis,
-      dimension_numbers=dimension_numbers)
+      dimension_numbers=dimension_numbers,
+  )
   blurred = _depthwise_conv2d(
       blurred,
       kernel=blur_v,
       strides=(1, 1),
       padding=padding,
       channel_axis=channel_axis,
-      dimension_numbers=dimension_numbers)
+      dimension_numbers=dimension_numbers,
+  )
   if expand_batch_dim:
     blurred = jnp.squeeze(blurred, axis=0)
   return blurred
