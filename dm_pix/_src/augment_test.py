@@ -523,6 +523,44 @@ class TestCustom(parameterized.TestCase):
   """Tests custom logic that is not covered by reference functions."""
 
   @parameterized.product(
+      mode_and_order=[("nearest", 0), ("nearest", 1), ("mirror", 1),
+                      ("constant", 1)],
+      channel_axis=(0, -3),
+  )
+  def test_affine_transform_channel_axis(self, mode_and_order, channel_axis):
+    mode, order = mode_and_order
+    image = np.random.RandomState(0).rand(10, 12, 3).astype(np.float32)
+    # Matrix and offset are always given in HWC order.
+    matrix = jnp.array([[0.8, 0.3, 0.], [-0.2, 1.1, 0.], [0., 0., 1.]])
+    offset = jnp.array([1.5, -2., 0.])
+    expected = augment.affine_transform(
+        image, matrix, offset=offset, mode=mode, order=order, cval=0.5)
+    result = augment.affine_transform(
+        np.moveaxis(image, -1, 0), matrix, offset=offset, mode=mode,
+        order=order, cval=0.5, channel_axis=channel_axis)
+    np.testing.assert_allclose(
+        result, np.moveaxis(expected, -1, 0), atol=1e-5)
+
+  @parameterized.product(
+      mode_and_order=[("nearest", 0), ("nearest", 1), ("mirror", 1),
+                      ("constant", 1)],
+      angle=(np.pi / 2, -np.pi / 4),
+      channel_axis=(0, -3),
+  )
+  def test_rotate_channel_axis(self, mode_and_order, angle, channel_axis):
+    mode, order = mode_and_order
+    image = np.random.RandomState(0).rand(10, 12, 3).astype(np.float32)
+    expected = augment.rotate(image, angle, mode=mode, order=order, cval=0.5)
+    rotate_fn = jax.jit(
+        augment.rotate,
+        static_argnames=("mode", "order", "cval", "channel_axis"))
+    result = rotate_fn(
+        np.moveaxis(image, -1, 0), angle, mode=mode, order=order, cval=0.5,
+        channel_axis=channel_axis)
+    np.testing.assert_allclose(
+        result, np.moveaxis(expected, -1, 0), atol=1e-5)
+
+  @parameterized.product(
       images_list=(_RAND_FLOATS_IN_RANGE, _RAND_FLOATS_OUT_OF_RANGE),
       height=(250, 200),
       width=(250, 200),
