@@ -212,7 +212,7 @@ def rgb_to_hsl(
                 (2 * eps + jnp.where(c_sum <= 1, c_sum, 2 - c_sum)))
   l = c_sum / 2
 
-  return jnp.stack([h, s, l], axis=-1)
+  return jnp.stack([h, s, l], axis=channel_axis)
 
 
 def hsl_to_rgb(
@@ -246,8 +246,11 @@ def hsl_to_rgb(
             hue < 0.5, m2,
             jnp.where(hue < 2 / 3, m1 + 6 * (m2 - m1) * (2 / 3 - hue), m1)))
 
-  image_rgb = jnp.stack([_f(h + 1 / 3), _f(h), _f(h - 1 / 3)], axis=-1)
-  return jnp.where(s[..., jnp.newaxis] == 0, l[..., jnp.newaxis], image_rgb)  # pyrefly: ignore[bad-index]
+  image_rgb = jnp.stack(
+      [_f(h + 1 / 3), _f(h), _f(h - 1 / 3)], axis=channel_axis)
+  return jnp.where(
+      jnp.expand_dims(s == 0, axis=channel_axis),
+      jnp.expand_dims(l, axis=channel_axis), image_rgb)
 
 
 def rgb_to_grayscale(
