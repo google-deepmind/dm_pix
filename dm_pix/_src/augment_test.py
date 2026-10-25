@@ -559,6 +559,8 @@ class TestCustom(parameterized.TestCase):
         channel_axis=channel_axis)
     np.testing.assert_allclose(
         result, np.moveaxis(expected, -1, 0), atol=1e-5)
+
+  @parameterized.product(
       shape_and_axis=(
           ((5, 7, 3), 2),
           ((5, 7, 3), -1),
