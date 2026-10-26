@@ -164,7 +164,11 @@ def simse(
 
   sum_fn = jnp.nansum if ignore_nans else jnp.sum
   a_dot_b = sum_fn((a * b), axis=(-3, -2, -1), keepdims=True)
-  b_dot_b = sum_fn((b * b), axis=(-3, -2, -1), keepdims=True)
+  b_squared = b * b
+  if ignore_nans:
+    # Fit the scale on the same paired pixels used in the numerator and MSE.
+    b_squared = jnp.where(jnp.isnan(a), jnp.nan, b_squared)
+  b_dot_b = sum_fn(b_squared, axis=(-3, -2, -1), keepdims=True)
   alpha = a_dot_b / b_dot_b
   return mse(a, alpha * b, ignore_nans=ignore_nans)
 

@@ -15,9 +15,11 @@ import functools
 import os
 
 from absl.testing import absltest
+from absl.testing import parameterized
 import chex
 from dm_pix._src import metrics
 import jax
+import jax.numpy as jnp
 import numpy as np
 import tensorflow as tf
 
@@ -79,6 +81,62 @@ class MSETest(chex.TestCase, absltest.TestCase):
     )
 
     assert not np.any(np.isnan(simse_jax_nan))
+
+
+class SIMSEMissingPixelsTest(chex.TestCase, parameterized.TestCase):
+
+  @chex.all_variants
+  @parameterized.product(
+      mask=("first", "second", "different", "matching", "none"),
+      batched=(False, True),
+  )
+  def test_matches_paired_least_squares(self, mask, batched):
+    a, b, expected = _simse_missing_pixels_inputs(mask, batched)
+    simse = self.variant(functools.partial(metrics.simse, ignore_nans=True))
+    actual = simse(jnp.asarray(a), jnp.asarray(b))
+    self.assertTrue(hasattr(actual, "shape"))
+    self.assertEqual(actual.shape, expected.shape)
+    np.testing.assert_allclose(actual, expected, atol=1e-7, rtol=1e-5)
+    np.testing.assert_allclose(
+        simse(a, b * 0.4), expected, atol=1e-7, rtol=1e-5
+    )
+
+  @chex.all_variants
+  def test_unpaired_values_do_not_affect_fit(self):
+    a = jnp.array([np.nan, 0.5]).reshape(1, 2, 1)
+    simse = self.variant(functools.partial(metrics.simse, ignore_nans=True))
+    for ignored_value in (0.0, 0.5, 1.0):
+      b = jnp.array([ignored_value, 0.5]).reshape(1, 2, 1)
+      np.testing.assert_allclose(simse(a, b), 0.0, atol=1e-8)
+
+  @chex.all_variants
+  def test_no_paired_pixels_remains_undefined(self):
+    a = jnp.array([np.nan, 0.5]).reshape(1, 2, 1)
+    b = jnp.array([0.5, np.nan]).reshape(1, 2, 1)
+    simse = self.variant(functools.partial(metrics.simse, ignore_nans=True))
+    self.assertTrue(jnp.isnan(simse(a, b)))
+
+  @chex.all_variants
+  def test_nan_propagation_without_ignore_is_unchanged(self):
+    a = jnp.array([np.nan, 0.5]).reshape(1, 2, 1)
+    b = jnp.ones_like(a)
+    simse = self.variant(metrics.simse)
+    self.assertTrue(jnp.isnan(simse(a, b)))
+
+  @chex.all_variants
+  def test_finite_input_gradients_are_unchanged(self):
+    a = jnp.linspace(0.1, 0.9, 12).reshape((2, 3, 2))
+    b = jnp.linspace(0.8, 0.2, 12).reshape((2, 3, 2))
+    simse = self.variant(metrics.simse)
+    simse_ignore_nans = self.variant(
+        functools.partial(metrics.simse, ignore_nans=True)
+    )
+    expected = jax.grad(simse, argnums=(0, 1))(a, b)
+    actual = jax.jit(jax.grad(simse_ignore_nans, argnums=(0, 1)))(a, b)
+    for actual_gradient, expected_gradient in zip(actual, expected):
+      np.testing.assert_allclose(
+          actual_gradient, expected_gradient, atol=1e-7, rtol=1e-5
+      )
 
 
 class SSIMTests(chex.TestCase, absltest.TestCase):
@@ -204,6 +262,32 @@ class SSIMTests(chex.TestCase, absltest.TestCase):
     )
 
     assert not np.any(np.isnan(ssim))
+
+
+def _simse_reference(a, b):
+  valid = ~np.isnan(a) & ~np.isnan(b)
+  a, b = a[valid], b[valid]
+  scale = np.dot(a, b) / np.dot(b, b)
+  return np.mean((a - scale * b) ** 2)
+
+
+def _simse_missing_pixels_inputs(mask, batched):
+  dtype = np.float64 if jax.config.x64_enabled else np.float32
+  a = np.linspace(0.1, 0.9, 12, dtype=dtype).reshape((2, 3, 2))
+  b = np.linspace(0.9, 0.2, 12, dtype=dtype).reshape((2, 3, 2))
+  if mask in ("first", "different", "matching"):
+    a[0, 0, 0] = np.nan
+  if mask in ("second", "matching"):
+    b[0, 0, 0] = np.nan
+  elif mask == "different":
+    b[1, 2, 1] = np.nan
+  if batched:
+    a = np.stack((a, np.flip(a), np.full_like(a, 0.3)))
+    b = np.stack((b, np.flip(b) * 0.4, np.full_like(b, 0.6)))
+    expected = np.array([_simse_reference(x, y) for x, y in zip(a, b)])
+  else:
+    expected = _simse_reference(a, b)
+  return a, b, expected
 
 
 if __name__ == "__main__":
