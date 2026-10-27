@@ -357,7 +357,8 @@ class ColorConversionTest(
 
   @chex.all_variants
   def test_chromatic_gradients_match_finite_differences(self):
-    x64 = np.asarray(jnp.array([0.2, 0.6, 0.9]), dtype=np.float64)
+    x = jnp.array([0.2, 0.6, 0.9])
+    x64 = np.asarray(x, dtype=np.float64)
     numerical = np.zeros((3, 3))
     for index in range(3):
       delta = np.zeros(3)
