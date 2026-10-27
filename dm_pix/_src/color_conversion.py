@@ -201,22 +201,32 @@ def rgb_to_hsl(
 
   # Mask denominators before division so achromatic branches also have
   # finite gradients, rather than masking undefined quotients afterward.
-  safe_diff = jnp.where(mask, 1., c_diff)
+  safe_diff = jnp.where(mask, 1.0, c_diff)
   rc = (c_max - red) / safe_diff
   gc = (c_max - green) / safe_diff
   bc = (c_max - blue) / safe_diff
 
   eps = jnp.finfo(jnp.float32).eps
   h = jnp.where(
-      mask, 0,
-      (jnp.where(red == c_max, bc - gc,
-                 jnp.where(green == c_max, 2 + rc - bc, 4 + gc - rc)) / 6) % 1)
+      mask,
+      0,
+      (
+          jnp.where(
+              red == c_max,
+              bc - gc,
+              jnp.where(green == c_max, 2 + rc - bc, 4 + gc - rc),
+          )
+          / 6
+      )
+      % 1,
+  )
   saturation_denominator = jnp.where(
-      mask, 1., 2 * eps + jnp.where(c_sum <= 1, c_sum, 2 - c_sum))
+      mask, 1.0, 2 * eps + jnp.where(c_sum <= 1, c_sum, 2 - c_sum)
+  )
   s = jnp.where(mask, 0, (c_diff + eps) / saturation_denominator)
   l = c_sum / 2
 
-  return jnp.stack([h, s, l], axis=-1)
+  return jnp.stack([h, s, l], axis=channel_axis)
 
 
 def hsl_to_rgb(
@@ -250,8 +260,11 @@ def hsl_to_rgb(
             hue < 0.5, m2,
             jnp.where(hue < 2 / 3, m1 + 6 * (m2 - m1) * (2 / 3 - hue), m1)))
 
-  image_rgb = jnp.stack([_f(h + 1 / 3), _f(h), _f(h - 1 / 3)], axis=-1)
-  return jnp.where(s[..., jnp.newaxis] == 0, l[..., jnp.newaxis], image_rgb)  # pyrefly: ignore[bad-index]
+  image_rgb = jnp.stack(
+      [_f(h + 1 / 3), _f(h), _f(h - 1 / 3)], axis=channel_axis)
+  return jnp.where(
+      jnp.expand_dims(s == 0, axis=channel_axis),
+      jnp.expand_dims(l, axis=channel_axis), image_rgb)
 
 
 def rgb_to_grayscale(

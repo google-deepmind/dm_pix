@@ -44,7 +44,7 @@ def _make_linear_interpolation_indices_nd(
     The lower and upper indices of `coordinates` and their weights.
   """
   lower = jnp.floor(coordinates).astype(jnp.int32)
-  upper = jnp.ceil(coordinates).astype(jnp.int32)
+  upper = (jnp.floor(coordinates) + 1).astype(jnp.int32)
   weights = coordinates - lower
 
   # Expand dimensions for `shape` to allow broadcasting it to every coordinate.

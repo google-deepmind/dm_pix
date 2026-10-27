@@ -74,6 +74,7 @@ class ColorConversionTest(
     hsv_to_rgb = self.variant(
         functools.partial(
             color_conversion.hsv_to_rgb, channel_axis=channel_axis))
+    hsv = None
     for hsv in generate_test_images(*test_images.value):
       hsv = np.clip(hsv, 0., 1.)
       rgb_tf = tf.image.hsv_to_rgb(hsv).numpy()
@@ -83,6 +84,7 @@ class ColorConversionTest(
       if not channel_last:
         rgb_jax = rgb_jax.swapaxes(-1, -3)
       np.testing.assert_allclose(rgb_jax, rgb_tf, rtol=1e-3, atol=1e-3)
+    assert hsv is not None
 
     # Check that taking gradients through the conversion function does not
     # create NaNs, which might happen due to some division by zero.
@@ -233,6 +235,34 @@ class ColorConversionTest(
       np.testing.assert_allclose(
           hsl_to_rgb(image_hsl), rgb_true, atol=1E-5, rtol=1E-5)
 
+  @parameterized.product(
+      conversion=("rgb_to_hsl", "hsl_to_rgb"),
+      channel_axis=(0, 1, -2, -1),
+      batched=(False, True),
+      use_jit=(False, True),
+  )
+  def test_hsl_channel_axis(self, conversion, channel_axis, batched, use_jit):
+    rgb = np.array([
+        [[0., 0., 0.], [1., 1., 1.], [0.5, 0.5, 0.5], [1., 0., 0.]],
+        [[0., 1., 0.], [0., 0., 1.], [0.2, 0.4, 0.7], [0.8, 0.3, 0.1]],
+    ], dtype=np.float32)
+    if batched:
+      rgb = np.stack([rgb, rgb[::-1]])
+    hsl = []
+    for pixel in rgb.reshape(-1, 3):
+      h, l, s = colorsys.rgb_to_hls(*map(float, pixel))
+      hsl.append([h, s, l])
+    hsl = np.asarray(hsl, dtype=np.float32).reshape(rgb.shape)
+    image, expected = (rgb, hsl) if conversion == "rgb_to_hsl" else (hsl, rgb)
+    image = jnp.asarray(np.moveaxis(image, -1, channel_axis))
+    expected = np.moveaxis(expected, -1, channel_axis)
+    convert = functools.partial(
+        getattr(color_conversion, conversion), channel_axis=channel_axis)
+    actual = (jax.jit(convert) if use_jit else convert)(image)
+    self.assertEqual(actual.shape, image.shape)
+    self.assertEqual(actual.dtype, image.dtype)
+    np.testing.assert_allclose(actual, expected, atol=1e-6, rtol=1e-6)
+
   @chex.all_variants
   def test_hsl_rgb_roundtrip(self):
     key = jax.random.PRNGKey(0)
@@ -282,24 +312,17 @@ class ColorConversionTest(
         np.testing.assert_allclose(
             grayscale_jax, grayscale_tf, atol=1E-5, rtol=1E-5)
 
-
-class HslGradientsTest(parameterized.TestCase):
-
-  @parameterized.product(
-      dtype=(jnp.float16, jnp.bfloat16, jnp.float32),
-      compiled=(False, True),
-  )
-  def test_greyscale_path_has_finite_lightness_gradients(self, dtype, compiled):
+  @chex.all_variants
+  @parameterized.parameters(jnp.float16, jnp.bfloat16, jnp.float32)
+  def test_greyscale_path_has_finite_lightness_gradients(self, dtype):
     def grey(level):
       return color_conversion.rgb_to_hsl(jnp.repeat(level[None], 3))
 
-    reverse = jax.jacrev(grey)
-    forward = jax.jacfwd(grey)
-    rgb_jacobian = jax.jacrev(color_conversion.rgb_to_hsl)
-    if compiled:
-      grey, reverse, forward, rgb_jacobian = map(
-          jax.jit, (grey, reverse, forward, rgb_jacobian)
-      )
+    reverse = self.variant(jax.jacrev(grey))
+    forward = self.variant(jax.jacfwd(grey))
+    rgb_jacobian = self.variant(jax.jacrev(color_conversion.rgb_to_hsl))
+    grey = self.variant(grey)
+
     for level in (0.0, 0.25, 0.5, 1.0):
       x = jnp.array(level, dtype=dtype)
       np.testing.assert_array_equal(grey(x), np.array([0.0, 0.0, level]))
@@ -310,29 +333,29 @@ class HslGradientsTest(parameterized.TestCase):
       # The existing achromatic hue/saturation branches are constants.
       np.testing.assert_array_equal(jacobian[:2], np.zeros((2, 3)))
 
-  @parameterized.parameters(False, True)
-  def test_mixed_image_values_and_gradients(self, compiled):
+  @chex.all_variants
+  def test_mixed_image_values_and_gradients(self):
     image = jnp.array(
         [[[0.0, 0.0, 0.0], [0.2, 0.6, 0.9]], [[0.5, 0.5, 0.5], [0.8, 0.3, 0.1]]]
     )
-    f = color_conversion.rgb_to_hsl
-    gradient = jax.grad(lambda x: jnp.sum(f(x)))
-    if compiled:
-      f, gradient = jax.jit(f), jax.jit(gradient)
-    expected = np.array(
-        [
-            colorsys.rgb_to_hls(*pixel)
-            for pixel in np.asarray(image).reshape(-1, 3)
-        ]
+    gradient = self.variant(
+        jax.grad(lambda x: jnp.sum(color_conversion.rgb_to_hsl(x)))
     )
+    expected = np.array([
+        colorsys.rgb_to_hls(*pixel)
+        for pixel in np.asarray(image).reshape(-1, 3)
+    ])
     expected = expected[:, [0, 2, 1]].reshape(image.shape)
 
-    actual = f(image)
-    actual_gradient = gradient(image)
+    np.testing.assert_allclose(
+        self.variant(color_conversion.rgb_to_hsl)(image),
+        expected,
+        rtol=2e-6,
+        atol=2e-7,
+    )
+    self.assertTrue(np.isfinite(gradient(image)).all())
 
-    np.testing.assert_allclose(actual, expected, rtol=2e-6, atol=2e-7)
-    self.assertTrue(np.isfinite(actual_gradient).all())
-
+  @chex.all_variants
   def test_chromatic_gradients_match_finite_differences(self):
     x64 = np.asarray(jnp.array([0.2, 0.6, 0.9]), dtype=np.float64)
     numerical = np.zeros((3, 3))
@@ -342,8 +365,9 @@ class HslGradientsTest(parameterized.TestCase):
       upper = np.array(colorsys.rgb_to_hls(*(x64 + delta)))[[0, 2, 1]]
       lower = np.array(colorsys.rgb_to_hls(*(x64 - delta)))[[0, 2, 1]]
       numerical[:, index] = (upper - lower) / (2e-5)
+
     np.testing.assert_allclose(
-        jax.jacrev(color_conversion.rgb_to_hsl)(jnp.asarray(x64)),
+        jax.jacrev(self.variant(color_conversion.rgb_to_hsl))(x),
         numerical,
         rtol=2e-5,
         atol=1e-6,
