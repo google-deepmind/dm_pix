@@ -326,13 +326,16 @@ class HslGradientsTest(parameterized.TestCase):
         ]
     )
     expected = expected[:, [0, 2, 1]].reshape(image.shape)
-    np.testing.assert_allclose(f(image), expected, rtol=2e-6, atol=2e-7)
-    self.assertTrue(np.isfinite(gradient(image)).all())
+
+    actual = f(image)
+    actual_gradient = gradient(image)
+
+    np.testing.assert_allclose(actual, expected, rtol=2e-6, atol=2e-7)
+    self.assertTrue(np.isfinite(actual_gradient).all())
 
   def test_chromatic_gradients_match_finite_differences(self):
-    x = jnp.array([0.2, 0.6, 0.9])
+    x64 = np.asarray(jnp.array([0.2, 0.6, 0.9]), dtype=np.float64)
     numerical = np.zeros((3, 3))
-    x64 = np.asarray(x).astype(np.float64)
     for index in range(3):
       delta = np.zeros(3)
       delta[index] = 1e-5
@@ -340,7 +343,7 @@ class HslGradientsTest(parameterized.TestCase):
       lower = np.array(colorsys.rgb_to_hls(*(x64 - delta)))[[0, 2, 1]]
       numerical[:, index] = (upper - lower) / (2e-5)
     np.testing.assert_allclose(
-        jax.jacrev(color_conversion.rgb_to_hsl)(x),
+        jax.jacrev(color_conversion.rgb_to_hsl)(jnp.asarray(x64)),
         numerical,
         rtol=2e-5,
         atol=1e-6,
