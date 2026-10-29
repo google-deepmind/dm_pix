@@ -202,22 +202,46 @@ class _ImageAugmentationTest(parameterized.TestCase):
   # Due to a bug in scipy we cannot test all available modes, refer to these
   # issues for more information: https://github.com/jax-ml/jax/issues/11097,
   # https://github.com/jax-ml/jax/issues/11097
-  @parameterized.named_parameters(
-      ("in_range_nearest_0", _RAND_FLOATS_IN_RANGE, "nearest", 0),
-      ("in_range_nearest_1", _RAND_FLOATS_IN_RANGE, "nearest", 1),
-      ("in_range_mirror_1", _RAND_FLOATS_IN_RANGE, "mirror", 1),
-      ("out_of_range_nearest_0", _RAND_FLOATS_OUT_OF_RANGE, "nearest", 0),
-      ("out_of_range_nearest_1", _RAND_FLOATS_OUT_OF_RANGE, "nearest", 1),
-      ("out_of_range_mirror_1", _RAND_FLOATS_OUT_OF_RANGE, "mirror", 1),
+  @parameterized.product(
+      parameters_base=[
+          ("in_range", "nearest", 0),
+          ("in_range", "nearest", 1),
+          ("in_range", "mirror", 1),
+          ("out_of_range", "nearest", 0),
+          ("out_of_range", "nearest", 1),
+          ("out_of_range", "mirror", 1),
+      ],
+      channel_axis=(-1, 0),
   )
-  def test_affine_transform(self, images_list, mode, order):
+  def test_affine_transform(self, parameters_base, channel_axis):
+    images_list_type, mode, order = parameters_base
+    if images_list_type == "in_range":
+      images_list = _RAND_FLOATS_IN_RANGE
+    elif images_list_type == "out_of_range":
+      images_list = _RAND_FLOATS_OUT_OF_RANGE
+    else:
+      raise ValueError(f"{images_list_type} not a valid image list for tests.")
+
+    def reference_fn(image, **kwargs):
+      # The matrix and offset are given in HWC order, so the SciPy reference
+      # is applied to the HWC version of the image.
+      if channel_axis == -1:
+        return scipy.ndimage.affine_transform(image, **kwargs)
+      transformed = scipy.ndimage.affine_transform(
+          np.moveaxis(image, channel_axis, -1), **kwargs)
+      return np.moveaxis(transformed, -1, channel_axis)
+
+    if channel_axis != -1:
+      images_list = [np.moveaxis(x, -1, channel_axis) for x in images_list]
+
     # (ndim, ndim) no offset
     self._test_fn(
         images_list,
         jax_fn=functools.partial(
-            augment.affine_transform, matrix=np.eye(3), mode=mode, order=order),
+            augment.affine_transform, matrix=np.eye(3), mode=mode, order=order,
+            channel_axis=channel_axis),
         reference_fn=functools.partial(
-            scipy.ndimage.affine_transform,
+            reference_fn,
             matrix=np.eye(3),
             order=order,
             mode=mode))
@@ -232,9 +256,10 @@ class _ImageAugmentationTest(parameterized.TestCase):
             matrix=matrix,
             mode=mode,
             offset=offset,
-            order=order),
+            order=order,
+            channel_axis=channel_axis),
         reference_fn=functools.partial(
-            scipy.ndimage.affine_transform,
+            reference_fn,
             matrix=matrix,
             offset=offset,
             order=order,
@@ -246,9 +271,10 @@ class _ImageAugmentationTest(parameterized.TestCase):
     self._test_fn(
         images_list,
         jax_fn=functools.partial(
-            augment.affine_transform, matrix=matrix, mode=mode, order=order),
+            augment.affine_transform, matrix=matrix, mode=mode, order=order,
+            channel_axis=channel_axis),
         reference_fn=functools.partial(
-            scipy.ndimage.affine_transform,
+            reference_fn,
             matrix=matrix,
             order=order,
             mode=mode))
@@ -258,9 +284,10 @@ class _ImageAugmentationTest(parameterized.TestCase):
     self._test_fn(
         images_list,
         jax_fn=functools.partial(
-            augment.affine_transform, matrix=matrix, mode=mode, order=order),
+            augment.affine_transform, matrix=matrix, mode=mode, order=order,
+            channel_axis=channel_axis),
         reference_fn=functools.partial(
-            scipy.ndimage.affine_transform,
+            reference_fn,
             matrix=matrix,
             order=order,
             mode=mode))
@@ -270,9 +297,10 @@ class _ImageAugmentationTest(parameterized.TestCase):
     self._test_fn(
         images_list,
         jax_fn=functools.partial(
-            augment.affine_transform, matrix=matrix, mode=mode, order=order),
+            augment.affine_transform, matrix=matrix, mode=mode, order=order,
+            channel_axis=channel_axis),
         reference_fn=functools.partial(
-            scipy.ndimage.affine_transform,
+            reference_fn,
             matrix=matrix,
             order=order,
             mode=mode))
@@ -290,8 +318,9 @@ class _ImageAugmentationTest(parameterized.TestCase):
       ],
       cval=(0.0, 1.0, -2.0),
       angle=(0.0, np.pi / 4, -np.pi / 4),
+      channel_axis=(-1, 0),
   )
-  def test_rotate(self, parameters_base, cval, angle):
+  def test_rotate(self, parameters_base, cval, angle, channel_axis):
     images_list_type, mode, order = parameters_base
     if images_list_type == "in_range":
       images_list = _RAND_FLOATS_IN_RANGE
@@ -299,13 +328,20 @@ class _ImageAugmentationTest(parameterized.TestCase):
       images_list = _RAND_FLOATS_OUT_OF_RANGE
     else:
       raise ValueError(f"{images_list_type} not a valid image list for tests.")
+    if channel_axis == -1:
+      axes = (1, 0)  # SciPy's default, rotating the H and W axes of HWC.
+    else:
+      images_list = [np.moveaxis(x, -1, channel_axis) for x in images_list]
+      axes = (2, 1)  # The H and W axes of CHW.
     self._test_fn(
         images_list,
         jax_fn=functools.partial(
-            augment.rotate, angle=angle, mode=mode, order=order, cval=cval),
+            augment.rotate, angle=angle, mode=mode, order=order, cval=cval,
+            channel_axis=channel_axis),
         reference_fn=functools.partial(
             scipy.ndimage.rotate,
             angle=angle * 180 / np.pi,  # SciPy uses degrees.
+            axes=axes,
             order=order,
             mode=mode,
             cval=cval,
@@ -521,44 +557,6 @@ class TestJit(_ImageAugmentationTest):
 
 class TestCustom(parameterized.TestCase):
   """Tests custom logic that is not covered by reference functions."""
-
-  @parameterized.product(
-      mode_and_order=[("nearest", 0), ("nearest", 1), ("mirror", 1),
-                      ("constant", 1)],
-      channel_axis=(0, -3),
-  )
-  def test_affine_transform_channel_axis(self, mode_and_order, channel_axis):
-    mode, order = mode_and_order
-    image = np.random.RandomState(0).rand(10, 12, 3).astype(np.float32)
-    # Matrix and offset are always given in HWC order.
-    matrix = jnp.array([[0.8, 0.3, 0.], [-0.2, 1.1, 0.], [0., 0., 1.]])
-    offset = jnp.array([1.5, -2., 0.])
-    expected = augment.affine_transform(
-        image, matrix, offset=offset, mode=mode, order=order, cval=0.5)
-    result = augment.affine_transform(
-        np.moveaxis(image, -1, 0), matrix, offset=offset, mode=mode,
-        order=order, cval=0.5, channel_axis=channel_axis)
-    np.testing.assert_allclose(
-        result, np.moveaxis(expected, -1, 0), atol=1e-5)
-
-  @parameterized.product(
-      mode_and_order=[("nearest", 0), ("nearest", 1), ("mirror", 1),
-                      ("constant", 1)],
-      angle=(np.pi / 2, -np.pi / 4),
-      channel_axis=(0, -3),
-  )
-  def test_rotate_channel_axis(self, mode_and_order, angle, channel_axis):
-    mode, order = mode_and_order
-    image = np.random.RandomState(0).rand(10, 12, 3).astype(np.float32)
-    expected = augment.rotate(image, angle, mode=mode, order=order, cval=0.5)
-    rotate_fn = jax.jit(
-        augment.rotate,
-        static_argnames=("mode", "order", "cval", "channel_axis"))
-    result = rotate_fn(
-        np.moveaxis(image, -1, 0), angle, mode=mode, order=order, cval=0.5,
-        channel_axis=channel_axis)
-    np.testing.assert_allclose(
-        result, np.moveaxis(expected, -1, 0), atol=1e-5)
 
   @parameterized.product(
       shape_and_axis=(
