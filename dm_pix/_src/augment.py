@@ -614,10 +614,11 @@ def affine_transform(
     image: chex.Array,
     matrix: chex.Array,
     *,
-    offset: Union[chex.Array, chex.Numeric] = 0.,
+    offset: Union[chex.Array, chex.Numeric] = 0.0,
     order: int = 1,
     mode: str = "nearest",
     cval: float = 0.0,
+    channel_axis: int = -1,
 ) -> chex.Array:
   """Applies an affine transformation given by matrix.
 
@@ -631,36 +632,34 @@ def affine_transform(
   in this function.
 
   Args:
-    image: a JAX array representing an image. Assumes that the image is
-      either HWC or CHW.
+    image: a JAX array representing an image. Assumes that the image is either
+      HWC or CHW.
     matrix: the inverse coordinate transformation matrix, mapping output
-      coordinates to input coordinates. If ndim is the number of dimensions of
-      input, the given matrix must have one of the following shapes:
-
-      - (ndim, ndim): the linear transformation matrix for each output
-        coordinate.
-      - (ndim,): assume that the 2-D transformation matrix is diagonal, with the
-        diagonal specified by the given value.
-      - (ndim + 1, ndim + 1): assume that the transformation is specified using
-        homogeneous coordinates [1]. In this case, any value passed to offset is
-        ignored.
-      - (ndim, ndim + 1): as above, but the bottom row of a homogeneous
+      coordinates to input coordinates. The matrix is always expressed in HWC
+      axis order, independently of `channel_axis`. If ndim is the number of
+      dimensions of input, the given matrix must have one of the following
+      shapes:  - (ndim, ndim): the linear transformation matrix for each output
+        coordinate. - (ndim,): assume that the 2-D transformation matrix is
+        diagonal, with the diagonal specified by the given value. - (ndim + 1,
+        ndim + 1): assume that the transformation is specified using homogeneous
+        coordinates [1]. In this case, any value passed to offset is ignored. -
+        (ndim, ndim + 1): as above, but the bottom row of a homogeneous
         transformation matrix is always [0, 0, 0, 1], and may be omitted.
-
     offset: the offset into the array where the transform is applied. If a
       float, offset is the same for each axis. If an array, offset should
-      contain one value for each axis.
-    order: the order of the spline interpolation, default is 1. The order has
-      to be in the range [0-1]. Note that PIX interpolation will only be used
-      for order=1, for other values we use `jax.scipy.ndimage.map_coordinates`.
+      contain one value for each axis, in HWC order.
+    order: the order of the spline interpolation, default is 1. The order has to
+      be in the range [0-1]. Note that PIX interpolation will only be used for
+      order=1, for other values we use `jax.scipy.ndimage.map_coordinates`.
     mode: the mode parameter determines how the input array is extended beyond
       its boundaries. Default is 'nearest'. Modes 'nearest and 'constant' use
       PIX interpolation, which is very fast on accelerators (especially on
-      TPUs). For all other modes, 'wrap', 'mirror' and 'reflect', we rely
-      on `jax.scipy.ndimage.map_coordinates`, which however is slow on
+      TPUs). For all other modes, 'wrap', 'mirror' and 'reflect', we rely on
+      `jax.scipy.ndimage.map_coordinates`, which however is slow on
       accelerators, so use it with care.
     cval: value to fill past edges of input if mode is 'constant'. Default is
       0.0.
+    channel_axis: the index of the channel axis.
 
   Returns:
     The input image transformed by the given matrix.
@@ -739,17 +738,23 @@ def affine_transform(
     error_msg = (
         "Expected matrix shape must be one of (ndim, ndim), (ndim,)"
         "(ndim + 1, ndim + 1) or (ndim, ndim + 1) being ndim the image.ndim. "
-        f"The affine matrix provided has shape {matrix.shape}.")
+        f"The affine matrix provided has shape {matrix.shape}."
+    )
     raise ValueError(error_msg)
 
-  meshgrid = jnp.meshgrid(*[jnp.arange(size) for size in image.shape],
-                          indexing="ij")
+  if channel_axis != -1:
+    image = jnp.moveaxis(image, source=channel_axis, destination=-1)
+
+  meshgrid = jnp.meshgrid(
+      *[jnp.arange(size) for size in image.shape], indexing="ij"
+  )
   indices = jnp.concatenate(
-      [jnp.expand_dims(x, axis=-1) for x in meshgrid], axis=-1)
+      [jnp.expand_dims(x, axis=-1) for x in meshgrid], axis=-1
+  )
 
   if matrix.shape == (4, 4) or matrix.shape == (3, 4):
-    offset = matrix[:image.ndim, image.ndim]  # pyrefly: ignore[bad-index]
-    matrix = matrix[:image.ndim, :image.ndim]  # pyrefly: ignore[bad-index]
+    offset = matrix[: image.ndim, image.ndim]  # pyrefly: ignore[bad-index]
+    matrix = matrix[: image.ndim, : image.ndim]  # pyrefly: ignore[bad-index]
 
   coordinates = indices @ matrix.T
   coordinates = jnp.moveaxis(coordinates, source=-1, destination=0)
@@ -763,7 +768,13 @@ def affine_transform(
       order=order,
       cval=cval,
   )
-  return interpolate_function(image, coordinates)
+  transformed_image = interpolate_function(image, coordinates)
+
+  if channel_axis != -1:  # Set channel axis back to original index.
+    transformed_image = jnp.moveaxis(
+        transformed_image, source=-1, destination=channel_axis
+    )
+  return transformed_image
 
 
 def rotate(
@@ -773,19 +784,21 @@ def rotate(
     order: int = 1,
     mode: str = "nearest",
     cval: float = 0.0,
+    channel_axis: int = -1,
 ) -> chex.Array:
   """Rotates an image around its center using interpolation.
 
   Args:
-    image: a JAX array representing an image. Assumes that the image is
-      either HWC or CHW.
+    image: a JAX array representing an image. Assumes that the image is either
+      HWC or CHW.
     angle: the counter-clockwise rotation angle in units of radians.
-    order: the order of the spline interpolation, default is 1. The order has
-      to be in the range [0,1]. See `affine_transform` for details.
+    order: the order of the spline interpolation, default is 1. The order has to
+      be in the range [0,1]. See `affine_transform` for details.
     mode: the mode parameter determines how the input array is extended beyond
       its boundaries. Default is 'nearest'. See `affine_transform` for details.
     cval: value to fill past edges of input if mode is 'constant'. Default is
       0.0.
+    channel_axis: the index of the channel axis.
 
   Returns:
     The rotated image.
@@ -797,12 +810,22 @@ def rotate(
   s = jnp.sin(angle)
   matrix = jnp.array([[c, s, 0], [-s, c, 0], [0, 0, 1]])
 
-  # Use the offset to place the rotation at the image center.
-  image_center = (jnp.asarray(image.shape) - 1.) / 2.
+  # Use the offset to place the rotation at the image center. The matrix and
+  # offset are expressed in HWC order, so the center is computed in that order.
+  hwc_shape = list(image.shape)
+  hwc_shape.append(hwc_shape.pop(channel_axis))
+  image_center = (jnp.asarray(hwc_shape) - 1.0) / 2.0
   offset = image_center - matrix @ image_center
 
-  return affine_transform(image, matrix, offset=offset, order=order, mode=mode,
-                          cval=cval)
+  return affine_transform(
+      image,
+      matrix,
+      offset=offset,
+      order=order,
+      mode=mode,
+      cval=cval,
+      channel_axis=channel_axis,
+  )
 
 
 def random_flip_left_right(
