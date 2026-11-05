@@ -1,6 +1,6 @@
 # PIX
 
-<img src="https://raw.githubusercontent.com/google-deepmind/dm_pix/master/dm_pix/images/pix_logo.png" title="PIX logo" height=200 width=200>
+<img src="https://raw.githubusercontent.com/google-deepmind/dm_pix/master/dm_pix/images/pix_logo.png" title="PIX logo" width=350>
 
 PIX is an image processing library in [JAX], for [JAX].
 
@@ -39,11 +39,11 @@ $ pip install dm-pix
 
 To use `PIX`, you just need to `import dm_pix as pix` and use it right away!
 
-For example, let's assume to have loaded the JAX logo (available in
-`examples/assets/jax_logo.jpg`) in a variable called `image` and we want to flip
+For example, let's assume to have loaded the PIX logo (available in
+`examples/assets/pix_logo.jpg`) in a variable called `image` and we want to flip
 it left to right.
 
-![JAX logo]
+![PIX logo]
 
 All it's needed is the following code!
 
@@ -58,7 +58,7 @@ flip_left_right_image = pix.flip_left_right(image)
 
 And here is the result!
 
-![JAX logo left-right]
+![PIX logo left-right]
 
 All the functions in PIX can be [`jax.jit`][jit]ed, [`jax.vmap`][vmap]ed and
 [`jax.pmap`][pmap]ed, so all the following functions can take advantage of
@@ -145,6 +145,6 @@ Please read our [contributing guidelines](./CONTRIBUTING.md) and send us PRs!
 [vmap]: https://jax.readthedocs.io/en/latest/jax.html#jax.vmap "jax.vmap documentation"
 
 [`examples/`]: ./examples/
-[JAX logo]: ./examples/assets/jax_logo.jpg
-[JAX logo left-right]: ./examples/assets/flip_left_right_jax_logo.jpg
+[PIX logo]: https://raw.githubusercontent.com/google-deepmind/dm_pix/master/examples/assets/pix_logo.jpg
+[PIX logo left-right]: https://raw.githubusercontent.com/google-deepmind/dm_pix/master/examples/assets/flip_left_right_pix_logo.jpg
 [`pyproject.toml`]: ./pyproject.toml

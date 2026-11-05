@@ -71,7 +71,7 @@ def main(_) -> None:
 
 
 def _get_image():
-  return jnp.array(pil.open("./assets/jax_logo.jpg"), dtype=jnp.float32) / 255.
+  return jnp.array(pil.open("./assets/pix_logo.jpg"), dtype=jnp.float32) / 255.
 
 
 def _imshow(image: jnp.ndarray) -> None:
