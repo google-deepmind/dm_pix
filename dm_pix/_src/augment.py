@@ -492,6 +492,7 @@ def gaussian_blur(
   # DO NOT REMOVE - Logging usage.
 
   chex.assert_rank(image, {3, 4})
+  chex.assert_type(image, float)
   chex.assert_size(sigma, 1)
   if isinstance(sigma, chex.Scalar):
     chex.assert_scalar_non_negative(sigma)
@@ -533,9 +534,12 @@ def _gaussian_blur(
   num_channels = image.shape[channel_axis]
   radius = int(kernel_size / 2)
   kernel_size_ = 2 * radius + 1
-  x = jnp.arange(-radius, radius + 1).astype(jnp.float32)
+  # Compute the weights in at least float32, then match the image dtype.
+  filter_dtype = jnp.result_type(image.dtype, jnp.float32)
+  x = jnp.arange(-radius, radius + 1, dtype=filter_dtype)
+  sigma = jnp.asarray(sigma, dtype=filter_dtype)
   blur_filter = jnp.exp(-(x**2) / (2.0 * sigma**2))
-  blur_filter = blur_filter / jnp.sum(blur_filter)
+  blur_filter = (blur_filter / jnp.sum(blur_filter)).astype(image.dtype)
   blur_v = jnp.reshape(blur_filter, [kernel_size_, 1, 1, 1])
   blur_h = jnp.reshape(blur_filter, [1, kernel_size_, 1, 1])
   blur_h = jnp.tile(blur_h, [1, 1, 1, num_channels])

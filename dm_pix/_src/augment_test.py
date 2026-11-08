@@ -792,6 +792,19 @@ class TestCustom(parameterized.TestCase):
       result = augment.gaussian_blur(image, sigma=sigma, kernel_size=3)
       np.testing.assert_allclose(result, expected, rtol=1e-6, atol=1e-6)
 
+  @parameterized.product(dtype=(jnp.float16, jnp.bfloat16), sigma=(0.0, 0.8))
+  def test_gaussian_blur_low_precision_image(self, dtype, sigma):
+    image = jnp.arange(20, dtype=dtype).reshape(4, 5, 1) / 32
+    blur = functools.partial(augment.gaussian_blur, kernel_size=3)
+    expected = blur(image.astype(jnp.float32), sigma).astype(dtype)
+    result = jax.jit(blur)(image, sigma)
+    self.assertEqual(result.dtype, image.dtype)
+    np.testing.assert_allclose(
+        result.astype(jnp.float32),
+        expected.astype(jnp.float32),
+        rtol=2 * jnp.finfo(dtype).eps,
+    )
+
   def test_negative_scalar_sigma_for_gaussian_blur(self):
     image = jnp.zeros((4, 4, 3))
     with self.assertRaises(AssertionError):
