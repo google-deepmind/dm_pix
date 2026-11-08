@@ -30,12 +30,11 @@ def _create_test_images(shape):
 class PatchTest(chex.TestCase, parameterized.TestCase):
 
   @chex.all_variants
-  @parameterized.named_parameters(
-      ('padding_valid', 'VALID'),
-      ('padding_same', 'SAME'),
+  @parameterized.product(
+      padding=('VALID', 'SAME'),
+      image_shape=((2, 5, 7, 3), (0, 5, 7, 3), (2, 2, 7, 3)),
   )
-  def test_extract_patches(self, padding):
-    image_shape = (2, 5, 7, 3)
+  def test_extract_patches(self, padding, image_shape):
     images = _create_test_images(image_shape)
 
     sizes = (1, 2, 3, 1)
