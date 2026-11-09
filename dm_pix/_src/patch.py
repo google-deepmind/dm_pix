@@ -13,6 +13,7 @@
 # limitations under the License.
 """This module provides image patching functionality."""
 
+import math
 from typing import Sequence
 
 import chex
@@ -89,7 +90,8 @@ def extract_patches(
 
   # `conv_general_dilated_patches` returns `patches` in channel-major order,
   # rearrange to match interface of `tf.image.extract_patches`.
-  patches = jnp.reshape(patches, patches.shape[:-1] + (channels, -1))
+  output_shape = patches.shape
+  patch_size = math.prod(sizes[1:-1])
+  patches = jnp.reshape(patches, output_shape[:-1] + (channels, patch_size))
   patches = jnp.moveaxis(patches, -2, -1)
-  patches = jnp.reshape(patches, patches.shape[:-2] + (-1,))
-  return patches
+  return jnp.reshape(patches, output_shape)
