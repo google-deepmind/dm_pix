@@ -534,12 +534,13 @@ def _gaussian_blur(
   num_channels = image.shape[channel_axis]
   radius = int(kernel_size / 2)
   kernel_size_ = 2 * radius + 1
-  # Compute the weights in at least float32, then match the image dtype.
-  filter_dtype = jnp.result_type(image.dtype, jnp.float32)
-  x = jnp.arange(-radius, radius + 1, dtype=filter_dtype)
-  sigma = jnp.asarray(sigma, dtype=filter_dtype)
+  # Keep the weights and both passes in at least float32 to avoid rounding
+  # the filter or intermediate image to low precision.
+  compute_dtype = jnp.result_type(image.dtype, jnp.float32)
+  x = jnp.arange(-radius, radius + 1, dtype=compute_dtype)
+  sigma = jnp.asarray(sigma, dtype=compute_dtype)
   blur_filter = jnp.exp(-(x**2) / (2.0 * sigma**2))
-  blur_filter = (blur_filter / jnp.sum(blur_filter)).astype(image.dtype)
+  blur_filter = blur_filter / jnp.sum(blur_filter)
   blur_v = jnp.reshape(blur_filter, [kernel_size_, 1, 1, 1])
   blur_h = jnp.reshape(blur_filter, [1, kernel_size_, 1, 1])
   blur_h = jnp.tile(blur_h, [1, 1, 1, num_channels])
@@ -551,7 +552,7 @@ def _gaussian_blur(
     if channel_axis >= 0:
       channel_axis += 1
   blurred = _depthwise_conv2d(
-      image,
+      image.astype(compute_dtype),
       kernel=blur_h,
       strides=(1, 1),
       padding=padding,
@@ -566,7 +567,7 @@ def _gaussian_blur(
       dimension_numbers=dimension_numbers)
   if expand_batch_dim:
     blurred = jnp.squeeze(blurred, axis=0)
-  return blurred
+  return blurred.astype(image.dtype)
 
 
 def rot90(
