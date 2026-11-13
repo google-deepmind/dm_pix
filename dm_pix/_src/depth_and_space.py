@@ -13,11 +13,21 @@
 # limitations under the License.
 """This module provides functions for rearranging blocks of spatial data."""
 
+import numbers
+
 import chex
 import jax
 import jax.numpy as jnp
 
 # DO NOT REMOVE - Logging lib.
+
+
+def _validate_block_size(block_size: int) -> None:
+  """Require a positive integer block size for spatial rearrangements."""
+  if (isinstance(block_size, bool)
+      or not isinstance(block_size, numbers.Integral)
+      or block_size < 2):
+    raise ValueError("block_size must be an integer >= 2.")
 
 
 def depth_to_space(inputs: chex.Array, block_size: int) -> chex.Array:
@@ -35,9 +45,10 @@ def depth_to_space(inputs: chex.Array, block_size: int) -> chex.Array:
   """
   # DO NOT REMOVE - Logging usage.
 
+  _validate_block_size(block_size)
   chex.assert_rank(inputs, {3, 4})
   if inputs.ndim == 4:  # Batched case.
-    return jax.vmap(depth_to_space, in_axes=(0, None))(inputs, block_size)
+    return jax.vmap(lambda x: depth_to_space(x, block_size))(inputs)
 
   height, width, depth = inputs.shape
   if depth % (block_size**2) != 0:
@@ -71,9 +82,10 @@ def space_to_depth(inputs: chex.Array, block_size: int) -> chex.Array:
   """
   # DO NOT REMOVE - Logging usage.
 
+  _validate_block_size(block_size)
   chex.assert_rank(inputs, {3, 4})
   if inputs.ndim == 4:  # Batched case.
-    return jax.vmap(space_to_depth, in_axes=(0, None))(inputs, block_size)
+    return jax.vmap(lambda x: space_to_depth(x, block_size))(inputs)
 
   height, width, depth = inputs.shape
   if height % block_size != 0:
