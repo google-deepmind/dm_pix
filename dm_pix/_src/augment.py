@@ -360,7 +360,7 @@ def pad_to_size(
     pad_width = ((top, bottom), (left, right), (0, 0))
   else:
     pad_width = ((0, 0), (top, bottom), (left, right))
-  if batch:
+  if batch is not None:
     pad_width = ((0, 0), *pad_width)
 
   return jnp.pad(image, pad_width=pad_width, mode=mode, **pad_kwargs or {})
