@@ -144,6 +144,8 @@ def simse(
   the optimally scaled `b` and `a` is returned: mse(a, alpha*b).
 
   This is a scale-invariant metric, so for example: simse(x, y) == sims(x, y*5).
+  If b contains only zeros, the optimal prediction is zero and the result is
+  the mean squared value of a.
 
   This metric was used in "Shape, Illumination, and Reflectance from Shading" by
   Barron and Malik, TPAMI, '15.
@@ -169,7 +171,14 @@ def simse(
     # Fit the scale on the same paired pixels used in the numerator and MSE.
     b_squared = jnp.where(jnp.isnan(a), jnp.nan, b_squared)
   b_dot_b = sum_fn(b_squared, axis=(-3, -2, -1), keepdims=True)
-  alpha = a_dot_b / b_dot_b
+  # A zero comparison image cannot be rescaled; its optimal prediction is
+  # still zero. Avoid 0/0 in both the value and the gradient computation.
+  nonzero_norm = b_dot_b > 0
+  alpha = jnp.where(
+      nonzero_norm,
+      a_dot_b / jnp.where(nonzero_norm, b_dot_b, 1.0),
+      0.0,
+  )
   return mse(a, alpha * b, ignore_nans=ignore_nans)
 
 
