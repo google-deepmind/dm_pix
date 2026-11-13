@@ -989,12 +989,17 @@ def random_crop(
   # DO NOT REMOVE - Logging usage.
 
   image_shape = image.shape
-  assert len(image_shape) == len(crop_sizes), (
-      f"Number of image dims {len(image_shape)} and number of crop_sizes "
-      f"{len(crop_sizes)} do not match.")
-  assert image_shape >= crop_sizes, (  # pyrefly: ignore[unsupported-operation]
-      f"Crop sizes {crop_sizes} should be a subset of image size {image_shape} "
-      "in each dimension .")
+  if len(image_shape) != len(crop_sizes):
+    raise ValueError(
+        f"Number of image dims {len(image_shape)} and number of crop_sizes "
+        f"{len(crop_sizes)} do not match."
+    )
+  if any(size < 0 or size > dimension
+         for size, dimension in zip(crop_sizes, image_shape)):
+    raise ValueError(
+        f"Crop sizes {crop_sizes} must be within image size {image_shape} "
+        "in every dimension."
+    )
   random_keys = jax.random.split(key, len(crop_sizes))
 
   slice_starts = [
