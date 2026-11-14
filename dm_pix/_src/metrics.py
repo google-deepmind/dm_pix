@@ -226,6 +226,14 @@ def ssim(
   chex.assert_equal_shape([a, b])
 
   if filter_fn is None:
+    # The "valid" convolution below would silently swap its arguments if the
+    # filter is longer than the image, so check the image size explicitly.
+    if min(a.shape[-3], a.shape[-2]) < int(filter_size):
+      raise ValueError(
+          f"Image height and width ({a.shape[-3]}, {a.shape[-2]}) must be at "
+          f"least `filter_size` ({filter_size})."
+      )
+
     # Construct a 1D Gaussian blur filter.
     hw = filter_size // 2
     shift = (2 * hw - filter_size + 1) / 2

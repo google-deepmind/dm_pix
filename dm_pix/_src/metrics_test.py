@@ -226,6 +226,30 @@ class SSIMTests(chex.TestCase, absltest.TestCase):
     np.testing.assert_allclose(ssim, -np.ones_like(ssim), atol=1e-5, rtol=1e-5)
 
   @chex.all_variants
+  @parameterized.parameters(
+      ((5, 5, 1),),
+      ((2, 20, 5, 3),),
+      ((2, 5, 20, 3),),
+  )
+  def test_ssim_raises_for_images_smaller_than_filter(self, shape):
+    """Test that SSIM rejects images smaller than the filter window."""
+    img = np.zeros(shape, dtype=np.float32)
+    ssim_fn = self.variant(functools.partial(metrics.ssim, filter_size=11))
+
+    with self.assertRaises(ValueError):
+      ssim_fn(img, img)
+
+  @chex.all_variants
+  def test_ssim_map_for_images_as_large_as_filter(self):
+    """Test that an image of the filter size gives a single SSIM value."""
+    img = np.zeros((11, 11, 1), dtype=np.float32)
+    ssim_fn = self.variant(
+        functools.partial(metrics.ssim, filter_size=11, return_map=True)
+    )
+
+    self.assertEqual(ssim_fn(img, img).shape, (1, 1, 1))
+
+  @chex.all_variants
   def test_ssim_finite_grad(self):
     """Test that SSIM produces a finite gradient on large flat regions."""
     img = np.zeros((64, 64, 3))
